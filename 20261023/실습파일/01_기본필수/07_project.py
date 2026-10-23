@@ -30,10 +30,11 @@ preprocessor = ColumnTransformer([
 # Dummy는 가장 많은 정답만 반복하는 비교 출발점입니다. 실제 AI 성능이 아닙니다.
 pipeline = Pipeline([("pre", preprocessor),
                      ("model", DummyClassifier(strategy="most_frequent"))])
-# TODO B07-1: pipeline.fit(X_train, y_train)으로 train에서만 학습하세요. pass를 지우고 작성합니다.
-pass
-# TODO B07-2: pipeline.predict(X_valid)로 검증 입력을 예측하세요. 현재 값은 임시값입니다.
-prediction = [1] * len(X_valid)
+# TODO B07-1: pipeline.fit(X_train, y_train)으로 train에서만 학습하세요. 
+#X_train과 y_train을 한 번에 학습함.
+pipeline.fit(X_train, y_train)
+# TODO B07-2: pipeline.predict(X_valid)로 검증 입력을 예측하세요. 
+prediction = pipeline.predict(X_valid)
 
 # 제공: 예측을 원래 ID·정답과 나란히 놓고, 이 파일 옆에 저장합니다.
 result = valid[["request_id", "failed"]].copy()
