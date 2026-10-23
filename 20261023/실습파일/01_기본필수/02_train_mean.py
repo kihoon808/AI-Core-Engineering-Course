@@ -4,7 +4,9 @@ valid_values = [100]
 
 # 진짜 학습 기준으로 사용할 수 있는 것은 train의 평균입니다.
 # TODO B02-1: train_values의 합을 개수로 나누세요.
-train_mean = 0
+#traim_mean은 train의 평균을 계산한 값. 즉, 15
+train_mean = sum(train_values) / len(train_values)
+
 # 아래 전체 평균은 '잘못된 기준과의 비교'를 위한 시연일 뿐입니다.
 all_values = train_values + valid_values
 all_mean = sum(all_values) / len(all_values)

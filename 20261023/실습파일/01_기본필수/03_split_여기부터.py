@@ -9,7 +9,9 @@ data = pd.read_csv(HERE / "requests.csv")
 
 # test_size=0.2는 전체 20행 중 4행을 따로 보관한다는 뜻입니다.
 # TODO B03-1: test 비율을 전체의 20%로 바꾸세요. 소수로 적습니다.
-test_ratio = 0.4
+# test_ratio = 0.4
+test_ratio = 0.2
+
 train_valid, test = train_test_split(
     data, test_size=test_ratio, random_state=42, stratify=data["failed"])
 # 남은 16행의 25%인 4행이 valid입니다. 아래 코드는 제공합니다.

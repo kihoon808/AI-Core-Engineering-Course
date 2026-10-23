@@ -16,6 +16,6 @@ train, valid = train_test_split(
 
 print("분할:", len(train), len(valid), len(test))
 # TODO A03-1: valid의 정답 개수를 세도록 자료를 바꾸세요.
-valid_counts = train["failed"].value_counts().sort_index()
-print("valid 정답 개수:", valid_counts.to_dict())
+valid_counts = valid["failed"].value_counts().sort_index()  #train.을valid로 바꿈
+print("valid 정답 개수:", valid_counts.to_dict())        
 print("seed: 42 / 42")

@@ -5,12 +5,13 @@ from sklearn.preprocessing import StandardScaler
 # 제공: 정상 숫자만 사용합니다. 결측 대체는 선택 단계에서 배웁니다.
 train = pd.DataFrame({"input_chars": [100, 200, 300]})
 valid = pd.DataFrame({"input_chars": [400, 500]})
-scaler = StandardScaler()
+scaler = StandardScaler() #StandardScaler는 평균을 빼고 표준편차로 나눈다.
 scaler.fit(train)
 
 # transform은 이미 배운 평균과 크기를 사용합니다. 다시 fit하지 않습니다.
 # TODO B04-1: scaler의 transform으로 valid를 변환하세요.
-valid_ready = valid
+# valid_ready = valid
+valid_ready = scaler.transform(valid) #valid 데이터에 train에서 계산된 평균과 표준편차를 적용
 print("train에서 배운 평균:", scaler.mean_.tolist())
 print("valid 변환 결과:")
 print(valid_ready.round(3))
