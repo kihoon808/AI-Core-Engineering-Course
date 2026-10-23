@@ -34,7 +34,7 @@ pipeline = Pipeline([("pre", preprocessor),
 #X_train과 y_train을 한 번에 학습함.
 pipeline.fit(X_train, y_train)
 # TODO B07-2: pipeline.predict(X_valid)로 검증 입력을 예측하세요. 
-prediction = pipeline.predict(X_valid)
+prediction = pipeline.predict(X_valid) #.predict로 예측한 결과를 prediction에 저장.
 
 # 제공: 예측을 원래 ID·정답과 나란히 놓고, 이 파일 옆에 저장합니다.
 result = valid[["request_id", "failed"]].copy()

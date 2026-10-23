@@ -10,6 +10,6 @@ encoder.fit(train)
 
 # TODO B05-1: encoder.transform(valid).tolist()로 실제 변환 결과를 구하세요.
 # valid_ready = [[0.0, 1.0], [1.0, 0.0]]
-valid_ready = encoder.transform(valid).tolist()
+valid_ready = encoder.transform(valid).tolist() # 0:qa, 1:summary 순서대로 배열을 만듦.
 print("열 순서:", encoder.categories_[0].tolist())
 print("valid 변환:", valid_ready)
