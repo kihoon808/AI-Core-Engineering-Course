@@ -1,0 +1,25 @@
+python -m venv .venv
+#파이썬 가상환경 실행 명령어.(cmnd에서 실행) .venv가 변수 명임. 다른걸로 사용 가능.
+
+.venv\Scripts\activate
+# 가상 환경 실행 명령어
+
+Material Icon Theme
+#아이콘 테마 확장프로그램
+
+int: 정수, float: 실수, str: 문자열, bool: 논리값, None: 값이 정해지지 않음.
+
+input은 항상 문자열을 반환.
+
+is_value를 소수점 첫째자리까지 표현하려면 is_value:,.1f로 표현
+
+<리스트>
+append/remove로 추가/제거
+
+items[-1]은 마지막 요소 접근
+
+<Set>
+&은 공통 요소. 교집합
+|는 합산
+-는 빼기
+
