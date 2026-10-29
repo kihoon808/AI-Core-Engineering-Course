@@ -4,12 +4,12 @@ import torch
 
 out = Path(__file__).resolve().parent / "outputs"
 out.mkdir(exist_ok=True)
-# CUDA를 사용할 수 있으면 cuda:0, 아니면 cpu를 선택하세요.
-# 선택된 device는 아래 연산과 기록에 함께 사용합니다.
-# >>> A01
 # TODO A01: 위 요구사항을 읽고 이 블록을 완성하세요.
-device = torch.device("cpu")
-# <<< A01
+if torch.cuda.is_available():
+    device = torch.device("cuda:0") # CUDA가 사용 가능하면 cuda:0으로 설정
+else:
+    device = torch.device("cpu") # CUDA가 사용 불가능하면 cpu로 설정
+
 x = torch.tensor([1., 2.]).to(device)
 info = {"torch": str(torch.__version__), "cuda_build": torch.version.cuda,
         "cuda_available": torch.cuda.is_available(), "selected_device": str(device)}
