@@ -11,10 +11,8 @@ X = torch.tensor([[float(r["x1"]),float(r["x2"])] for r in valid_rows])
 model = SimpleANN()
 # 직접 저장한 model_state.pt를 map_location="cpu", weights_only=True로 읽고 모델에 넣으세요.
 # 먼저 같은 모델 구조를 만들었습니다. 인터넷에서 받은 출처 불명 파일은 읽지 마세요.
-# >>> H10
-# TODO H10: 위 요구사항을 읽고 이 블록을 완성하세요.
-pass
-# <<< H10
+state_dict = torch.load(base / "outputs" / "model_state.pt", map_location="cpu", weights_only=True) #가중치 주입
+model.load_state_dict(state_dict)
 model.eval()
 with torch.no_grad():
     predictions = model(X).argmax(dim=1).tolist()

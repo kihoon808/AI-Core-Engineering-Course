@@ -12,19 +12,19 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 print("학습 전 loss:", round(loss_fn(model(X), y).item(), 6))
 model.train()
 for epoch in range(80):
-    optimizer.zero_grad()
+    optimizer.zero_grad() #기존 기울기 초기화
     loss = loss_fn(model(X), y)
     # 현재 loss의 gradient를 계산하세요.
     # 파라미터 값은 아직 바뀌지 않으며 .grad에 기울기가 들어갑니다.
     # >>> B06
     # TODO B06: 위 요구사항을 읽고 이 블록을 완성하세요.
-    pass
+    loss.backward() #역전파로 학습
     # <<< B06
     # 현재 gradient를 사용해 파라미터를 한 번 갱신하세요.
     # optimizer의 step 메서드를 호출합니다.
     # >>> B07
     # TODO B07: 위 요구사항을 읽고 이 블록을 완성하세요.
-    pass
+    optimizer.step() #파라미터 업데이트
     # <<< B07
 model.eval()
 with torch.no_grad():

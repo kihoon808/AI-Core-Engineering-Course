@@ -2,7 +2,7 @@
 import torch
 
 def train_one_epoch(model, loader, loss_fn, optimizer, device):
-    model.train()
+    model.train() #학습 모드 전환
     total, count = 0.0, 0
     for xb, yb in loader:
         xb, yb = xb.to(device), yb.to(device)
@@ -12,7 +12,8 @@ def train_one_epoch(model, loader, loss_fn, optimizer, device):
         # 매 batch마다 초기화하고 새로운 gradient로 갱신해야 합니다.
         # >>> H07
         # TODO H07: 위 요구사항을 읽고 이 블록을 완성하세요.
-        pass
+        loss.backward() #역전파
+        optimizer.step() #최적화
         # <<< H07
         total += loss.item() * len(yb)
         count += len(yb)
@@ -28,7 +29,8 @@ def evaluate(model, X, y, loss_fn, device):
         # logits에서 클래스 인덱스를 구하고 CPU로 옮겨 prediction에 저장하세요.
         # 평가에서는 backward와 optimizer.step을 호출하지 않습니다.
         # >>> H08
-        # TODO H08: 위 요구사항을 읽고 이 블록을 완성하세요.
-        prediction = torch.zeros(len(y), dtype=torch.long)
+        #모델이 출력한 로짓에서 logits.argmax(dim=1)로 가장 점수가 높은 클래스 인덱스를 추출합니다
+        #평가 시 Logits에서 예측 클래스 인덱스 추출 (cpu 텐서 변환)
+        prediction = logits.argmax(dim=1).cpu() 
         # <<< H08
     return loss, (prediction == y.cpu()).float().mean().item(), prediction

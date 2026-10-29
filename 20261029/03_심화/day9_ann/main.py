@@ -1,4 +1,16 @@
-"""실습 07: 120건 학습, 40건 검증. test 40건은 다음 독립 평가용으로 보관합니다."""
+"""실습 07: 120건 학습, 40건 검증. test 40건은 다음 독립 평가용으로 보관합니다.
+
+data/points.csv
+총 200개의 데이터 샘플로 구성된 2차원 좌표 분류 데이터셋입니다.
+
+id (문자열): 표본 고유 식별자 (예: P001, P002 등)
+x1, x2 (실수형, float): 2차원 평면 위의 좌표 입력 특성(Features)
+label (정수형, int): 클래스 레이블 (0 또는 1, 이진 분류)
+split (문자열): 데이터셋 분할 기준
+train: 학습용 데이터 (120건)
+valid: 검증용 데이터 (40건)
+"""
+
 from pathlib import Path
 import csv
 import json
@@ -35,13 +47,11 @@ for epoch in range(1, 81):
     history.append([epoch, online_loss, valid_loss, accuracy])
     if epoch % 10 == 0:
         print(epoch, round(online_loss, 6), round(valid_loss, 6), round(accuracy, 4))
+
 # 아래는 저장 과정입니다. 전체 Module 대신 직접 학습한 파라미터 사전만 저장합니다.
 # model의 state_dict를 outputs/model_state.pt로 저장하세요.
 # 배포 파일에는 미리 학습한 모델이 없습니다. 실행한 본인이 만든 파일만 복원합니다.
-# >>> H09
-# TODO H09: 위 요구사항을 읽고 이 블록을 완성하세요.
-pass
-# <<< H09
+torch.save(model.state_dict(), out / "model_state.pt") #모델 전체 객체 대신 학습된 파라미터 사전(state_dict)만 저장
 with (out / "training_history.csv").open("w", encoding="utf-8-sig", newline="") as f:
     w=csv.writer(f);w.writerow(["epoch","train_loss_online","valid_loss","valid_accuracy"]);w.writerows(history)
 metrics = {"epochs":80,"device":str(device),"train_rows":120,"valid_rows":40,"test_used":False,

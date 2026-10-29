@@ -28,8 +28,8 @@ class TrainingChecks(unittest.TestCase):
         # H11 요구: 7건을 3·3·1로 나눈 손실이 전체 손실과 소수점5자리까지 같음을 검사하세요.
         # 수치를 출력만 하지 말고 self.assertAlmostEqual을 사용합니다.
         # >>> H11
-        # TODO H11: actual과 expected가 같은지 검사하세요.
-        self.fail("TODO H11 미완성")
+        #자투리 배치 가중 평균 손실과 전체 손실의 일치 여부 검증 (소수점 5자리)
+        self.assertAlmostEqual(actual, expected, places=5)
         # <<< H11
 
     def test_evaluation_does_not_learn(self):
@@ -41,8 +41,12 @@ class TrainingChecks(unittest.TestCase):
         # 추가: prediction에 requires_grad가 없음을 assertFalse로 확인합니다.
         # 모델의 eval 모드 전환은 정상입니다. 이 단계는 모드 복구까지 요구하지 않습니다.
         # >>> H12
-        # TODO H12: 가중치·gradient·예측의 그래프 여부를 검사하세요.
-        self.fail("TODO H12 미완성")
+        #평가 수행 후 파라미터 값 및 grad 불변성, 예측 텐서의 계산 그래프 비연결 확인
+        for k, v in self.model.state_dict().items():
+            self.assertTrue(torch.equal(v, before[k]))
+        for p, g in zip(self.model.parameters(), grads):
+            self.assertTrue(torch.equal(p.grad, g))
+        self.assertFalse(prediction.requires_grad)
         # <<< H12
 
 if __name__ == "__main__":

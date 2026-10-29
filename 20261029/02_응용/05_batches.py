@@ -12,8 +12,7 @@ dataset = TensorDataset(X, y)
 # 정상 데이터 10건이 4·4·2로 나뉘어야 합니다. num_workers=0을 유지합니다.
 # >>> A05
 # TODO A05: 위 요구사항을 읽고 이 블록을 완성하세요.
-loader = DataLoader(dataset, batch_size=5, shuffle=False, num_workers=0)
-# <<< A05
+loader = DataLoader(dataset, batch_size=4, shuffle=False, drop_last=False, num_workers=0)
 sizes = []
 for index, (xb, yb) in enumerate(loader, 1):
     sizes.append([index, len(yb)])
@@ -35,7 +34,7 @@ loss_means = [0.1, 0.2, 0.9]
 sample_counts = [4, 4, 2]
 # >>> A09
 # TODO A09: 배치 크기까지 반영한 평균을 계산하세요.
-weighted_loss = 0.0
+weighted_loss = sum(l * n for l, n in zip(loss_means, sample_counts)) / sum(sample_counts)
 # <<< A09
 print("샘플 가중 loss:", round(weighted_loss, 6))
 print("배치 단순 평균:", round(sum(loss_means) / len(loss_means), 6))

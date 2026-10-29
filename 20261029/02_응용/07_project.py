@@ -41,7 +41,8 @@ for epoch in range(81):
             # train 자료만 loader에 들어갑니다. valid로 backward하거나 학습하지 마세요.
             # >>> A07
             # TODO A07: 위 요구사항을 읽고 이 블록을 완성하세요.
-            pass
+            loss.backward() #역전파
+            optimizer.step() #가중치 갱신
             # <<< A07
     # epoch=0은 학습 전입니다. 로그는 갱신이 끝난 동일 모델로 측정합니다.
     if epoch % 10 == 0:
@@ -66,7 +67,7 @@ with torch.no_grad():
     # CSV로 저장하기 전에 CPU로 옮깁니다. y_valid의 순서는 그대로 유지하세요.
     # >>> A08
     # TODO A08: 위 요구사항을 읽고 이 블록을 완성하세요.
-    predictions = torch.zeros(len(y_valid), dtype=torch.long)
+    predictions = logits.argmax(dim=1).cpu() #클래스 차원(dim=1)에서 최대값 인덱스를 찾고, 파일 저장을 위해 CPU 텐서로 변환
     # <<< A08
 metrics = {"device": str(device), "torch": str(torch.__version__), "epochs": 80,
            "train_rows": len(train_rows), "valid_rows": len(valid_rows), "test_used": False,
@@ -89,7 +90,13 @@ print("생성: outputs의 환경·학습·검증 결과")
 # 완료: 오류 행 수 = 40 - 맞힌 개수, 저장 파일은 헤더를 포함합니다.
 # >>> A10
 # TODO A10: 실제 오답 행만 ID와 함께 수집하세요.
-errors = []
+#모델이 틀린 검증 데이터만 골라내어 분석용 파일(validation_errors.csv)로 저장합니다.
+#실제 정답(y)과 예측값(p)이 다른 경우만 리스트에 튜플로 담습니다.
+errors = [
+    (r["id"], int(y), int(p))
+    for r, y, p in zip(valid_rows, y_valid, predictions)
+    if int(y) != int(p) #실제값과 예측이 다를 경우에만 선택합니다.
+]
 # <<< A10
 with (out / "validation_errors.csv").open("w", encoding="utf-8-sig", newline="") as f:
     writer = csv.writer(f)

@@ -14,7 +14,7 @@ for step in range(1, 11):
         # 여기는 no_grad 블록 안입니다. 새 값으로 Tensor 객체를 교체하지 말고 w를 직접 갱신하세요.
         # >>> A03
         # TODO A03: 위 요구사항을 읽고 이 블록을 완성하세요.
-        pass
+        w.data = w.data - lr * w.grad 
         # <<< A03
     w.grad.zero_()
     # 아래 loss는 갱신한 w에서 다시 계산한 값입니다.
