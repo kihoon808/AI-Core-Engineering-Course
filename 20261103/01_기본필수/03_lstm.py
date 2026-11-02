@@ -12,16 +12,15 @@ valid = torch.tensor(df.loc[df["split"]=="valid","value"].values,dtype=torch.flo
 
 # unfold(0,13,1): 과거 12개+다음 정답 1개인 묶음을 만든다.
 window = train.unfold(0,13,1)
-x = window[:,:12].unsqueeze(-1)
-y = window[:,12:13]
+x = window[:,:12].unsqueeze(-1) #과거 12시점 (입력)
+y = window[:,12:13] #13번째 시점 (예측 타겟)
 lstm = nn.LSTM(1,8,batch_first=True)
 head = nn.Linear(8,1)
 output, (h_n,c_n) = lstm(x)
 # TODO B03: 12개 관측의 마지막 은닉 출력으로 다음 값 1개를 예측한다.
 # [:, -1, :]는 마지막 시점이다. 이 예제의 Window 길이는 모두 12이다.
-# BEGIN B03
-prediction = head(output[:, 0, :])
-# END B03
+prediction = head(output[:, -1, :]) #마지막 시점 인덱스인 -1을 참조
+
 print("입력 / 정답:", tuple(x.shape), tuple(y.shape))
 print("h_n / c_n:", tuple(h_n.shape), tuple(c_n.shape))
 print("예측:", tuple(prediction.shape))
