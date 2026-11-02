@@ -22,19 +22,24 @@ train = datasets.ImageFolder(root / "data" / "train", transform=weights.transfor
 valid = datasets.ImageFolder(root / "data" / "valid", transform=weights.transforms())
 # 1 epoch는 학습 경로 점검용이다. 이 숫자로 일반화 성능의 우열을 단정하지 않는다.
 rows = []
+"""
+구분	    Head 전략 (mode="head")	                        Partial 파인튜닝 (mode="partial")
+학습 대상	최종 분류 계층(model.fc)만 학습	                 model.fc + 최상위 백본 블록(model.layer4)
+동결 대상	백본 전체 (layer1-layer4)	                    하위 백본 (layer1-layer3)
+목적/특징	파라미터 수가 적어 과적합 위험이 낮고 빠름	       현재 도메인 특성에 맞게 고수준 추상 특징까지 추가 적응
+"""
 for mode in ["head", "partial"]:
     torch.manual_seed(42)
     model = resnet18(weights=weights)  # 가중치가 없으면 공식 다운로드. 무작위 초기화로 대체하지 않는다.
     for param in model.parameters():
-        param.requires_grad = False
-    model.fc = nn.Linear(model.fc.in_features, 2)
+        param.requires_grad = False #전체 모델 동결
+    model.fc = nn.Linear(model.fc.in_features, 2) #2개 클래스 분류 헤드로 교체
     groups = [{"params": model.fc.parameters(), "lr": 0.001}]
     if mode == "partial":
-        # BEGIN A06
         # TODO A06: partial일 때만 layer4의 미분을 켠다.
         for param in model.layer4.parameters():
-            param.requires_grad = False
-        # END A06
+            param.requires_grad = True
+
         groups.append({"params": model.layer4.parameters(), "lr": 0.0001})
     optimizer = torch.optim.AdamW(groups, weight_decay=0.0001)
     train_loader = DataLoader(train, batch_size=4, shuffle=True, num_workers=0,
