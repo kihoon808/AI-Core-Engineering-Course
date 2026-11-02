@@ -19,9 +19,8 @@ for epoch in range(40):
     reconstructed = model(x)
     # TODO B04: Autoencoder의 정답을 입력 x 자체로 설정한다.
     # 정상 데이터를 0으로 바꾸는 과제가 아니다. reconstruction과 x를 비교한다.
-    # BEGIN B04
-    loss = nn.MSELoss()(reconstructed, torch.zeros_like(x))
-    # END B04
+    loss = nn.MSELoss()(reconstructed, x)
+    
     loss.backward()
     optimizer.step()
 model.eval()
