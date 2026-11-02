@@ -19,10 +19,9 @@ x = torch.rand(4, 3, 32, 32)
 rows = []
 for stride in [1, 2]:
     torch.manual_seed(42)
-    # BEGIN A02
     # TODO A02: 현재 반복의 stride를 Conv2d에 전달한다.
-    conv = nn.Conv2d(3, 8, 3, stride=1, padding=1)
-    # END A02
+    conv = nn.Conv2d(3, 8, 3, stride=stride, padding=1)
+    
     y = conv(x)
     params = sum(p.numel() for p in conv.parameters())
     # 1 MAC=곱셈 후 누적 1회. bias 덧셈은 제외하며 batch 전체 값이다.
