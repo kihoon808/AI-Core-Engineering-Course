@@ -8,12 +8,14 @@ import numpy as np
 os.chdir(Path(__file__).resolve().parent)
 
 image = cv2.imread("noisy.png")
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# >>> TODO B03
-# gray를 (5,5), sigmaX=0으로 흐리게 하여 blur를 만드세요. blur에 Canny 80,160을 적용하여 edge를 만드세요.
-blur = gray.copy()
-edge = gray.copy()
-# <<< TODO B03
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) #1채널 흑백 이미지로 변환
+
+#가우시안 블러 적용: 커널 크기 (5, 5), 표준편차 sigmaX = 0 (자동 계산)
+blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+#캐니 엣지 검출 적용: 하한 임곗값 80, 상한 임곗값 160
+edge = cv2.Canny(blur, 80, 160)
+
 cv2.imwrite("p03_blur.png", blur)
 cv2.imwrite("p03_edge.png", edge)
 print("설정: Gaussian (5,5), sigmaX=0, Canny 80/160")
