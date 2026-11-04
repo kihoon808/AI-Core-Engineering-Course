@@ -8,13 +8,12 @@ import numpy as np
 os.chdir(Path(__file__).resolve().parent)
 
 # 색상 이미지: 한 픽셀의 값 순서는 B, G, R입니다.
-# >>> TODO B01
 # scene.png를 cv2.imread로 읽어 image에 저장하세요. flags를 생략하면 BGR 컬러로 읽습니다.
-image = None
-# <<< TODO B01
+image = cv2.imread("scene.png")
+
 print("shape:", image.shape)
 print("dtype:", image.dtype)
 print("min/max:", int(image.min()), int(image.max()))
-print("빨강 패치의 BGR:", image[30, 30].tolist())
+print("빨강 패치의 BGR:", image[30, 30].tolist()) #행 인덱스 30(Y축), 열 인덱스 30(X축) 위치의 픽셀 값입니다.
 saved = cv2.imwrite("p01_copy.png", image)
 print("PNG 저장:", saved)
