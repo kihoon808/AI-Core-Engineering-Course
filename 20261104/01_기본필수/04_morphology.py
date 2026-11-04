@@ -9,15 +9,14 @@ os.chdir(Path(__file__).resolve().parent)
 
 image = cv2.imread("objects.png")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-threshold_value, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-kernel = np.ones((3, 3), dtype=np.uint8)
-# >>> TODO B04
+threshold_value, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY) #고정 임계값 이진화
+kernel = np.ones((3, 3), dtype=np.uint8) #모폴로지 필터링의 마스크 역할을 하는 3x3 크기의 사각형 구조 요소
 # binary에 3×3 kernel을 사용한 Opening을 적용하세요. 결과 이름은 opened입니다.
-opened = binary.copy()
-# <<< TODO B04
+opened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+
 cv2.imwrite("p04_gray.png", gray)
 cv2.imwrite("p04_binary.png", binary)
 cv2.imwrite("p04_open.png", opened)
-print("임계값:", threshold_value)
+print("임계값:", threshold_value) 
 print("전경 픽셀:", int(np.count_nonzero(binary)), "->", int(np.count_nonzero(opened)))
 print("결과 값:", np.unique(opened).tolist())
