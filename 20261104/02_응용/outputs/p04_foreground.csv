@@ -1,0 +1,3 @@
+﻿method,threshold,before,after
+fixed,127.0,38302,38334
+otsu,116.0,42113,42149
