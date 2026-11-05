@@ -25,6 +25,7 @@ model = nn.Sequential(
     nn.AdaptiveAvgPool2d((4, 4)), nn.Flatten(), nn.Linear(256, 3),
 )
 # 안전한 수치 배열만 읽습니다. Target 이미지로 사전학습한 파일이 아닙니다.
+#source_backbone.npz에 저장된 사전학습 가중치(saved.files)만 기존 state_dict에 덮어써서 백본에 주입합니다.
 with np.load(DATA / "source_backbone.npz", allow_pickle=False) as saved:
     state = model.state_dict()
     state.update({name: torch.from_numpy(saved[name].copy()) for name in saved.files})
@@ -33,9 +34,8 @@ model.load_state_dict(state)
 for p in model.parameters():
     p.requires_grad = False
 # TODO B02: 256개 특징에서 3개 logit을 출력하는 새 Linear Head를 만드세요.
-# BEGIN B02
-model[9] = nn.Linear(256, 1)  # 출력 개수를 고치세요.
-# END B02
+model[9] = nn.Linear(256, 3)
+
 print("source 종류: 별도 합성 이미지로 사전학습한 TinyShapeCNN")
 print("학습 파라미터:", sum(p.numel() for p in model.parameters() if p.requires_grad))
 print("출력 shape:", tuple(model.eval()(torch.zeros(2, 3, 32, 32)).shape))
