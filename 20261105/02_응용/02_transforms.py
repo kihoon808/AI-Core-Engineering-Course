@@ -23,9 +23,9 @@ from torchvision.models import ResNet18_Weights
 from PIL import Image
 weights = ResNet18_Weights.IMAGENET1K_V1  # Enum·변환 생성은 다운로드하지 않음
 # TODO A02: Weight가 제공하는 transforms()를 가져오세요.
-# BEGIN A02
-official = tr.Compose([tr.ToTensor()])  # weights.transforms()로 바꾸세요.
-# END A02
+#내부적으로 Resize(256), CenterCrop(224), ToTensor(), Normalize(mean, std)가 결합된 표준 ImageNet 전처리 객체가 반환됩니다.
+official = weights.transforms()
+
 image = Image.open(sorted((DATA/"valid"/"circle").glob("*.png"))[0]).convert("RGB")
 print("소형 source 입력:",tuple(transform(image).shape),"범위 [0,1]")
 print("공식 ResNet 입력:",tuple(official(image).shape))
