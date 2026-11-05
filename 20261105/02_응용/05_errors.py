@@ -45,7 +45,8 @@ for p in model[9].parameters():
 model.eval()  # 고정 Backbone의 running 통계도 보존
 optimizer = torch.optim.AdamW(model[9].parameters(), lr=0.01, weight_decay=0.0)
 criterion = nn.CrossEntropyLoss()
-# 제공된 8회 학습. 평가용 valid를 backward에 넣지 않습니다.
+
+# 정규 8 에포크 학습을 수행합니다. 평가용 valid를 backward에 넣지 않습니다.
 for epoch in range(8):
     optimizer.zero_grad()
     loss = criterion(model(X_train), y_train)
@@ -57,9 +58,10 @@ with torch.no_grad():
     predictions = logits.argmax(dim=1)
 
 # TODO A05: 실제값과 예측값이 다른 행의 인덱스를 구하세요.
-# BEGIN A05
-indices = []  # 예측과 실제가 다른 인덱스를 구하세요.
-# END A05
+#실제 라벨(y_valid)과 예측 라벨(predictions)이 일치하지 않는 데이터의 인덱스 번호를 추출합니다.
+#8회 학습 기준으로는 검증셋 90개(각 30개)에 대해 오답이 0건이 발생하여 indices는 빈 리스트 []가 됩니다.
+indices = (predictions != y_valid).nonzero().flatten().tolist()
+
 records=[]
 for old in OUT.glob("error_*.png"):old.unlink()
 for i in indices[:8]:
@@ -70,5 +72,6 @@ for i in indices[:8]:
     draw.text((5,225),f"p={probabilities[i].max().item():.3f}",fill="black")
     tile.save(OUT/f"error_{i:03d}.png")
     records.append({"file":Path(valid.samples[i][0]).name,"actual":int(y_valid[i]),"predicted":int(predictions[i]),"confidence":probabilities[i].max().item()})
+    
 pd.DataFrame(records,columns=["file","actual","predicted","confidence"]).to_csv(OUT/"errors.csv",index=False)
 print("전체 오답:",len(indices),"저장:",len(records),"없으면 생성하지 않음")
