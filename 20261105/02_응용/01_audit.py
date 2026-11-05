@@ -22,17 +22,17 @@ transform = tr.Compose([tr.Resize((32, 32)), tr.ToTensor()])
 from collections import defaultdict
 import hashlib
 rows = []
-seen = defaultdict(list)
+seen = defaultdict(list) #파일의 SHA-256 해시값을 Key로, 해당 해시를 갖는 파일 경로 리스트를 Value로 보관하는 딕셔너리입니다.
 for split in ["train", "valid", "test"]:
     dataset = ImageFolder(DATA / split)
     for label, name in enumerate(dataset.classes):
-        # TODO A01: 해당 라벨의 개수를 세세요.
-        # BEGIN A01
-        count = 0  # dataset.targets에서 label의 수를 세세요.
-        # END A01
+        count = dataset.targets.count(label)  # dataset.targets에서 label의 수를 세세요.
+
         rows.append({"split": split, "class": name, "n": count, "ratio": count/len(dataset)})
+    ##파일명을 신뢰하지 않고 바이너리 바이트 자체를 SHA-256으로 해싱하여 동일성을 판별합니다.
     for path,_ in dataset.samples:
         seen[hashlib.sha256(Path(path).read_bytes()).hexdigest()].append(str(Path(path).relative_to(DATA)))
+
 table = pd.DataFrame(rows)
 table.to_csv(OUT/"class_counts.csv", index=False)
 print(table.round(4).to_string(index=False))
