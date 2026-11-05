@@ -43,6 +43,7 @@ for p in model[9].parameters():
 model.eval()  # 고정 Backbone의 running 통계도 보존
 optimizer = torch.optim.AdamW(model[9].parameters(), lr=0.01, weight_decay=0.0)
 criterion = nn.CrossEntropyLoss()
+
 # 오류 관찰용 초기 1회 학습. 07번 최종 8회 학습 모델과 구분합니다.
 for epoch in range(1):
     optimizer.zero_grad()
@@ -55,9 +56,14 @@ with torch.no_grad():
     predictions = logits.argmax(dim=1)
 
 # TODO B05: 실제 y_valid와 predictions로 혼동행렬을 만드세요. 행=실제, 열=예측.
-# BEGIN B05
-matrix = np.zeros((3, 3), dtype=int)  # confusion_matrix 호출로 바꾸세요.
-# END B05
+matrix = confusion_matrix(y_valid, predictions, labels=[0, 1, 2])
+"""
+0행(circle 실제 3개): 전부 circle로 예측 [3, 0, 0]
+1행(square 실제 3개): 1개는 circle, 2개는 square로 예측 [1, 2, 0]
+2행(triangle 실제 3개): 3개 모두 circle로 오예측 [3, 0, 0]
+소수 클래스인 triangle을 단 1건도 탐지하지 못하고 다수 클래스인 circle로 쏠리는 편향이 그대로 드러납니다.
+"""
+
 print("혼동행렬:\n", matrix)
 print(classification_report(y_valid, predictions, labels=[0, 1, 2], target_names=valid.classes, zero_division=0, digits=3))
 errors = (predictions != y_valid).nonzero().flatten().tolist()
