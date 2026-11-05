@@ -18,6 +18,7 @@ OUT = BASE
 # 여기서는 [0,1] RGB 32×32로 학습한 교육용 source 가중치를 사용합니다.
 # ImageNet ResNet18과 입력 변환을 섞지 않습니다.
 transform = tr.Compose([tr.Resize((32, 32)), tr.ToTensor()])
+#전체 데이터를 단일 텐서(torch.stack)로 묶어 풀 배치(Full-batch) 연산으로 처리하여 입출력 오버헤드를 최소화합니다.
 train = ImageFolder(DATA / "train", transform=transform)
 valid = ImageFolder(DATA / "valid", transform=transform)
 X_train = torch.stack([train[i][0] for i in range(len(train))])
@@ -43,12 +44,16 @@ for strategy in ["head", "partial"]:
     for p in model.parameters():
         p.requires_grad = False
     # TODO B03: 두 전략에서 Head(9)를 열고, partial일 때 두 번째 Conv(4)도 여세요.
-    # BEGIN B03
     for p in model[9].parameters():
         p.requires_grad = True
+    if strategy == "partial":
+        for p in model[4].parameters():
+            p.requires_grad = True
+    
     # partial에서 model[4]의 파라미터도 True로 바꾸는 코드를 추가하세요.
-    # END B03
-    model.eval()  # BN 통계는 두 전략 모두 고정합니다.
+
+    #배치 통계 갱신은 고정(Frozen BN)한 채, 순수 가중치 텐서만 역전파로 업데이트
+    model.eval()
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0.0)
     for epoch in range(8):
         optimizer.zero_grad()
