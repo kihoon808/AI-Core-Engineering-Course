@@ -78,3 +78,11 @@ def delete_knowledge(knowledge_id: int):
                 write_data(data)
                 return Response(status_code=204)
     raise HTTPException(404, "Knowledge not found")
+
+"""
+[핵심 개념 요약]
+1. 관심사 분리(Separation of Concerns): 라우팅/검증(main.py)과 파일 I/O 및 잠금(storage.py)을 분리하여 모듈성을 확보합니다.
+2. 계층화 아키텍처: 엔드포인트 핸들러는 비즈니스 플로우를 제어하고, 실제 파일 영속성은 스토리지 함수에 위임합니다.
+3. 스키마와 저장소의 분리: Pydantic 모델(KnowledgeWrite)은 통신 규격 검증용이며, 실제 파일 저장 형식(JSON)과는 독립적입니다.
+4. CRUD 완성: 조회(GET), 생성(POST), 수정(PUT), 삭제(DELETE)의 RESTful API 전체 라이프사이클을 완성합니다.
+"""
