@@ -55,8 +55,8 @@ def create_knowledge(payload: KnowledgeWrite):
         entry = payload.model_dump()
         # BEGIN A05-03
         # TODO A05-03: 삭제 뒤 다시 생성해도 중복되지 않도록 next_id에서 ID를 발급하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A05-03를 먼저 완성하세요.")
+        # 삭제 후에도 고유성을 보장하기 위해 단조 증가하는 next_id 부여
+        entry["id"] = data["next_id"]
         # END A05-03
         data["entries"].append(entry)
         data["next_id"] += 1
@@ -81,16 +81,29 @@ def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
 
 @app.delete("/api/knowledge/{knowledge_id}", status_code=204)
 def delete_knowledge(knowledge_id: int):
+    # 동시성 충돌 방지를 위한 임계 구역 잠금(Lock) 획득
     with LOCK:
         data = read_data()
         for i, entry in enumerate(data["entries"]):
             # BEGIN A05-01
             # TODO A05-01: 현재 entry가 요청 ID와 같을 때만 위치 i의 항목을 제거·저장하고 본문 없는 204를 반환하세요.
-            # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-            raise NotImplementedError("A05-01를 먼저 완성하세요.")
+            # ID 일치 항목 삭제 후 즉시 저장 및 204 No Content 반환
+            if entry["id"] == knowledge_id:
+                data["entries"].pop(i)
+                write_data(data)
+                return Response(status_code=204)
             # END A05-01
     # BEGIN A05-02
     # TODO A05-02: 대상을 찾지 못하면 404를 raise하세요. next_id나 파일을 변경하지 마세요.
-    # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-    raise NotImplementedError("A05-02를 먼저 완성하세요.")
+    # 미존재 ID 삭제 요청 시 404 Not Found 발생
+    raise HTTPException(404, "Knowledge not found")
     # END A05-02
+
+"""
+[핵심 개념 요약]
+1. HTTP 204 No Content: 리소스 삭제 성공 시 본문(Body)을 비우고 상태 코드 204로 응답하여 불필요한 트래픽을 절감합니다.
+2. 식별자 단조 증가(Monotonic ID): 항목을 삭제하더라도 next_id 시퀀스를 줄이지 않아 ID 재사용으로 인한 충돌을 방지합니다.
+3. 안전한 리스트 pop & 조기 반환: 대상 요소를 찾은 즉시 pop(i) 후 return하므로 순회 중 인덱스 변조 문제를 방지합니다.
+4. 재삭제 시 404 응답: 이미 삭제된 리소스에 대해 동일한 DELETE 요청이 재인입되면 404 Not Found를 발생시켜 상태를 통지합니다.
+"""
+
