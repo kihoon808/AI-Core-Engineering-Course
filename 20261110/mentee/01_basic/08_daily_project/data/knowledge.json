@@ -1,0 +1,35 @@
+{
+  "next_id": 7,
+  "entries": [
+    {
+      "id": 1,
+      "title": "가상환경",
+      "category": "setup",
+      "content": "프로젝트별 패키지를 분리한다."
+    },
+    {
+      "id": 2,
+      "title": "서버 실행",
+      "category": "api",
+      "content": "uvicorn으로 개발 서버를 켠다."
+    },
+    {
+      "id": 3,
+      "title": "입력 오류",
+      "category": "api",
+      "content": "422이면 입력값을 확인한다."
+    },
+    {
+      "title": "가상환경 관리",
+      "content": "프로젝트별 독립된 가상환경(.backendenv)을 구축하여 종속성을 격리합니다.",
+      "category": "setup",
+      "id": 4
+    },
+    {
+      "title": "오류 발생 시 대처",
+      "content": "에러 로그의 역추적(Traceback) 메시지와 입력 페이로드를 대조하여 확인합니다.",
+      "category": "troubleshoot",
+      "id": 5
+    }
+  ]
+}
