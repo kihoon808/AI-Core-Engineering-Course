@@ -70,19 +70,31 @@ def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
 
 @app.delete("/api/knowledge/{knowledge_id}", status_code=204)
 def delete_knowledge(knowledge_id: int):
+    # 동시성 충돌 방지를 위한 임계 구역 잠금(Lock) 획득
     with LOCK:
         data = read_data()
         for i, entry in enumerate(data["entries"]):
             if entry["id"] == knowledge_id:
                 # BEGIN B05-01
                 # TODO B05-01: 찾은 위치 i의 지식 한 개만 entries에서 제거하세요. 파일 전체를 삭제하지 마세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("B05-01를 먼저 완성하세요.")
+                # 대상 인덱스의 엔트리를 리스트에서 제거 (next_id는 감소시키지 않음)
+                data["entries"].pop(i)
                 # END B05-01
                 # BEGIN B05-02
                 # TODO B05-02: 제거한 결과를 파일에 저장하세요. 다른 항목과 next_id는 유지하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("B05-02를 먼저 완성하세요.")
+                # 변경된 데이터를 파일에 원자적으로 영구 기록
+                write_data(data)
                 # END B05-02
+                # 본문(Body)이 없는 HTTP 204 No Content 응답 반환
                 return Response(status_code=204)
+    # 삭제 대상 ID가 없는 경우 404 Not Found 반환
     raise HTTPException(404, "Knowledge not found")
+
+"""
+[핵심 개념 요약]
+1. HTTP 204 No Content: 리소스 삭제 성공 시 본문(Body)을 비우고 상태 코드 204로 응답하여 불필요한 트래픽을 절감합니다.
+2. 식별자 단조 증가(Monotonic ID): 항목을 삭제하더라도 next_id 시퀀스를 줄이지 않아 ID 재사용으로 인한 충돌을 방지합니다.
+3. 안전한 리스트 pop & 조기 반환: 대상 요소를 찾은 즉시 pop(i) 후 return하므로 순회 중 인덱스 변조 문제를 방지합니다.
+4. 재삭제 시 404 응답: 이미 삭제된 리소스에 대해 동일한 DELETE 요청이 재인입되면 404 Not Found를 발생시켜 상태를 통지합니다.
+"""
+
