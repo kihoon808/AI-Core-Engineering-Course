@@ -29,8 +29,8 @@ def list_knowledge():
     # 파일 전체에는 내부용 next_id도 있으므로 entries만 응답합니다.
     # BEGIN B07-01
     # TODO B07-01: 통합 목록 Route에서 entries만 응답하도록 연결하세요.
-    # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-    raise NotImplementedError("B07-01를 먼저 완성하세요.")
+    # 공개 데이터 엔트리 리스트만 반환
+    return data["entries"]
     # END B07-01
 
 @app.get("/api/knowledge/{knowledge_id}")
@@ -55,8 +55,8 @@ def create_knowledge(payload: KnowledgeWrite):
         data["next_id"] += 1
         # BEGIN B07-02
         # TODO B07-02: 생성된 지식과 증가한 next_id를 파일에 함께 저장하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("B07-02를 먼저 완성하세요.")
+        # 신규 항목 추가 및 다음 ID 증가 상태를 영구 저장
+        write_data(data)
         # END B07-02
     # 201을 선언하는 것만으로 저장되지는 않습니다. 실제 저장 성공 뒤 응답합니다.
     return entry
@@ -72,8 +72,8 @@ def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
                 updated["id"] = knowledge_id
                 # BEGIN B07-03
                 # TODO B07-03: 같은 ID의 위치 i를 updated로 교체하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("B07-03를 먼저 완성하세요.")
+                # 기존 인덱스 위치에 갱신 객체 대체
+                data["entries"][i] = updated
                 # END B07-03
                 write_data(data)
                 return updated
@@ -90,7 +90,16 @@ def delete_knowledge(knowledge_id: int):
                 write_data(data)
                 # BEGIN B07-04
                 # TODO B07-04: 삭제 저장 후 본문 없는 204 응답을 반환하세요. dict 또는 JSON 문자열을 넣지 마세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("B07-04를 먼저 완성하세요.")
+                # 본문 없는 204 No Content 반환
+                return Response(status_code=204)
                 # END B07-04
     raise HTTPException(404, "Knowledge not found")
+
+"""
+[핵심 개념 요약]
+1. 통합 CRUD 파이프라인: 단일 애플리케이션 내에서 생성(201), 조회(200), 수정(200), 삭제(204) 라이프사이클을 완성합니다.
+2. 스토리지 무결성: Lock을 통해 동시 요청 시 파일 읽기-수정-쓰기 연산의 원자성을 보장합니다.
+3. 표준 HTTP 상태 코드: 성공 시 200/201/204를 명확히 구분하고, 실패 시 404/422로 표준화된 에러를 클라이언트에 제공합니다.
+4. 재사용 준비: 일일 프로젝트(08)에서 비즈니스 지식 데이터를 안정적으로 적재할 수 있는 백엔드 엔진을 완성합니다.
+"""
+
