@@ -42,25 +42,34 @@ def get_knowledge(knowledge_id: int):
 
 @app.post("/api/knowledge", status_code=201, response_model=Knowledge)
 def create_knowledge(payload: KnowledgeWrite):
-    # 하나의 잠금으로 현재 데이터 읽기 → ID 발급 → 저장을 함께 보호합니다.
+    # 동시성 충돌 방지를 위한 임계 구역 잠금(Lock) 획득
     with LOCK:
         data = read_data()
         entry = payload.model_dump()
         entry["id"] = data["next_id"]
         # BEGIN B03-01
         # TODO B03-01: 새 entry를 data 안의 entries 목록 끝에 한 번 추가하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("B03-01를 먼저 완성하세요.")
+        # 메모리 목록 끝에 새 데이터 항목 추가
+        data["entries"].append(entry)
         # END B03-01
         # BEGIN B03-02
         # TODO B03-02: 다음 생성에 쓸 next_id 값을 1 증가시키세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("B03-02를 먼저 완성하세요.")
+        # 중복 방지를 위한 다음 발급용 식별자 1 증가
+        data["next_id"] += 1
         # END B03-02
         # BEGIN B03-03
         # TODO B03-03: 변경된 data 전체를 write_data에 전달해 저장하세요. LOCK 블록 안에서 호출하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("B03-03를 먼저 완성하세요.")
+        # 변경된 상태를 JSON 파일에 영구 기록
+        write_data(data)
         # END B03-03
-    # 201을 선언하는 것만으로 저장되지는 않습니다. 실제 저장 성공 뒤 응답합니다.
+    # HTTP 201 Created 응답과 함께 생성된 리소스 반환
     return entry
+
+"""
+[핵심 개념 요약]
+1. Pydantic 스키마 검증: 요청 바디(HTTP Body)를 KnowledgeWrite 모델로 자동 역직렬화 및 유효성(길이 제약)을 사전 검증합니다.
+2. 서버 주도 ID 발급: 클라이언트 입력이 아닌 서버 저장소의 next_id를 기반으로 고유 식별자를 부여하여 무결성을 보장합니다.
+3. 동시성 제어(LOCK): 멀티스레드 환경에서 읽기-수정-쓰기(RMW) 경쟁 상태(Race Condition)를 Lock으로 원자화합니다.
+4. HTTP 201 상태코드: 리소스 신규 생성 완료 시 상태코드 201과 response_model 규격에 맞춘 생성 객체를 반환합니다.
+"""
+
