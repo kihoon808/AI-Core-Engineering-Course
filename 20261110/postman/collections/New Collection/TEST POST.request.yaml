@@ -1,0 +1,16 @@
+$kind: http-request
+description: ""
+url: http://127.0.0.1:8000/api/knowledge
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \"title\": \"Postman 첫 등록\",\r
+
+    \"content\": \"Postman 클라이언트에서 전송한 본문입니다.\",\r
+
+    \"category\": \"api\"\r
+
+    }"
+order: 1000
