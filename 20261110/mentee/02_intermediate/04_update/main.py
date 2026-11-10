@@ -62,30 +62,41 @@ def create_knowledge(payload: KnowledgeWrite):
 
 @app.put("/api/knowledge/{knowledge_id}", response_model=Knowledge)
 def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
+    # 동시성 충돌 방지를 위한 임계 구역 잠금(Lock) 획득
     with LOCK:
         data = read_data()
         for i, entry in enumerate(data["entries"]):
             # BEGIN A04-01
             # TODO A04-01: 현재 항목이 수정 대상인지 비교 결과를 same_id에 넣으세요.
-            # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-            raise NotImplementedError("A04-01를 먼저 완성하세요.")
+            # 경로 파라미터 ID와 현재 항목의 고유 ID 일치 여부 판별
+            same_id = entry["id"] == knowledge_id
             # END A04-01
             if same_id:
                 # BEGIN A04-02
                 # TODO A04-02: 새 입력을 dict로 만들고 기존 knowledge_id를 유지하여 updated를 구성하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-02를 먼저 완성하세요.")
+                # 요청 바디 직렬화 및 기존 자원 식별자(ID) 보존
+                updated = payload.model_dump()
+                updated["id"] = knowledge_id
                 # END A04-02
                 # BEGIN A04-03
                 # TODO A04-03: 대상 위치 i를 updated로 교체하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-03를 먼저 완성하세요.")
+                # 리스트의 기존 인덱스 위치를 업데이트된 데이터로 인플레이스 교체
+                data["entries"][i] = updated
                 # END A04-03
                 # BEGIN A04-04
                 # TODO A04-04: 변경 내용을 저장하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-04를 먼저 완성하세요.")
+                # 변경된 전체 데이터를 파일에 원자적으로 영구 기록
+                write_data(data)
                 # END A04-04
                 return updated
     # 없는 ID를 새로 생성하지 않습니다. PUT에서도 세 입력 필드가 모두 필수입니다.
     raise HTTPException(404, "Knowledge not found")
+
+"""
+[핵심 개념 요약]
+1. HTTP PUT과 멱등성: 동일한 페이로드로 여러 번 요청해도 서버 상태가 동일하게 유지되는 멱등적 자원 대체(Replace) 연산입니다.
+2. 식별자(ID) 불변성: Body에 ID가 없더라도 URI 경로 매개변수(knowledge_id)를 고정 유지하여 자원의 식별자 변조를 방지합니다.
+3. 인플레이스(In-place) 갱신: 리스트 인덱스(data['entries'][i])를 지정해 교체함으로써 전체 항목 개수나 next_id 증가 없이 수정합니다.
+4. 비-Upsert 404 정책: 수정 대상 ID가 파일 내에 존재하지 않는 경우 자동 생성하지 않고 명시적으로 404 Not Found를 응답합니다.
+"""
+
