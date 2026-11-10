@@ -33,8 +33,8 @@ def list_knowledge(category: str | None = None):
         data = read_data()
     # BEGIN A07-01
     # TODO A07-01: 읽은 entries와 category를 select_category에 넘겨 결과를 응답하세요.
-    # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-    raise NotImplementedError("A07-01를 먼저 완성하세요.")
+    # 분리된 queries 모듈의 순수 함수를 호출하여 필터링된 결과 반환
+    return select_category(data["entries"], category)
     # END A07-01
 
 @app.get("/api/knowledge/{knowledge_id}")
@@ -55,8 +55,9 @@ def create_knowledge(payload: KnowledgeWrite):
         entry["id"] = data["next_id"]
         # BEGIN A07-02
         # TODO A07-02: 생성할 entry를 한 번 추가하고 next_id를 한 번 증가시키세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A07-02를 먼저 완성하세요.")
+        # 메모리 리스트에 추가 및 시퀀스 증가
+        data["entries"].append(entry)
+        data["next_id"] += 1
         # END A07-02
         write_data(data)
     # 201을 선언하는 것만으로 저장되지는 않습니다. 실제 저장 성공 뒤 응답합니다.
@@ -73,8 +74,8 @@ def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
                 updated["id"] = knowledge_id
                 # BEGIN A07-03
                 # TODO A07-03: 수정 대상 위치를 updated로 교체하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A07-03를 먼저 완성하세요.")
+                # 대상 인덱스에 수정된 데이터 대체
+                data["entries"][i] = updated
                 # END A07-03
                 write_data(data)
                 return updated
@@ -91,7 +92,16 @@ def delete_knowledge(knowledge_id: int):
                 write_data(data)
                 # BEGIN A07-04
                 # TODO A07-04: 삭제 성공에서 빈 204 응답을 반환하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A07-04를 먼저 완성하세요.")
+                # 본문 없는 204 No Content 반환
+                return Response(status_code=204)
                 # END A07-04
     raise HTTPException(404, "Knowledge not found")
+
+"""
+[핵심 개념 요약]
+1. 모듈화된 비즈니스 쿼리: queries.py(select_category, find_entry)와 연계하여 라우터의 책임을 단순화합니다.
+2. 원자적 트랜잭션 보장: LOCK 블록 내부에서 데이터 읽기, 가공, 쓰기 연산을 수행하여 레이스 컨디션을 원천 차단합니다.
+3. RESTful 인터페이스 완성: HTTP 표준 규격(GET, POST 201, PUT 200, DELETE 204, 에러 404/422)을 완벽히 충족합니다.
+4. 일일 프로젝트 연계: 완성된 CRUD 엔진을 기반으로 08 일일 프로젝트의 실제 도메인 지식 구축을 진행합니다.
+"""
+
