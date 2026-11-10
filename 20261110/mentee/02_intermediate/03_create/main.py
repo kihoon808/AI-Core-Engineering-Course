@@ -49,28 +49,38 @@ def get_knowledge(knowledge_id: int):
 
 @app.post("/api/knowledge", status_code=201, response_model=Knowledge)
 def create_knowledge(payload: KnowledgeWrite):
-    # 하나의 잠금으로 현재 데이터 읽기 → ID 발급 → 저장을 함께 보호합니다.
+    # 동시성 충돌 방지를 위한 임계 구역 잠금(Lock) 획득
     with LOCK:
         data = read_data()
         # BEGIN A03-01
         # TODO A03-01: 검증된 payload를 dict로 변환하여 entry에 저장하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A03-01를 먼저 완성하세요.")
+        # Pydantic 모델을 딕셔너리로 직렬화
+        entry = payload.model_dump()
         # END A03-01
         # BEGIN A03-02
         # TODO A03-02: 현재 data의 next_id를 새 entry의 id로 지정하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A03-02를 먼저 완성하세요.")
+        # 서버 관리 시퀀스로부터 고유 식별자(ID) 부여
+        entry["id"] = data["next_id"]
         # END A03-02
         # BEGIN A03-03
         # TODO A03-03: entries에 새 지식을 추가한 뒤 다음 ID를 1 올리세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A03-03를 먼저 완성하세요.")
+        # 메모리 컬렉션에 추가 및 다음 ID 증가
+        data["entries"].append(entry)
+        data["next_id"] += 1
         # END A03-03
         # BEGIN A03-04
         # TODO A03-04: 변경된 data를 파일에 저장하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A03-04를 먼저 완성하세요.")
+        # 원자적 파일 쓰기 수행
+        write_data(data)
         # END A03-04
-    # 201을 선언하는 것만으로 저장되지는 않습니다. 실제 저장 성공 뒤 응답합니다.
+    # HTTP 201 Created 응답과 함께 생성된 리소스 반환
     return entry
+
+"""
+[핵심 개념 요약]
+1. Pydantic 스키마 검증: 요청 바디(HTTP Body)를 KnowledgeWrite 모델로 자동 역직렬화 및 유효성(길이 제약)을 사전 검증합니다.
+2. 서버 주도 ID 발급: 클라이언트 입력이 아닌 서버 저장소의 next_id를 기반으로 고유 식별자를 부여하여 무결성을 보장합니다.
+3. 동시성 제어(LOCK): 멀티스레드 환경에서 읽기-수정-쓰기(RMW) 경쟁 상태(Race Condition)를 Lock으로 원자화합니다.
+4. HTTP 201 상태코드: 리소스 신규 생성 완료 시 상태코드 201과 response_model 규격에 맞춘 생성 객체를 반환합니다.
+"""
+
