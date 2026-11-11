@@ -1,21 +1,8 @@
 
 """
-실습 06: TensorRT 추론 엔진 생성 명령어 설계
-
-[실습 목적]
-ONNX 모델을 TensorRT 추론 엔진으로 변환할 때 필요한
-명령어와 동적 입력 크기(Dynamic Shape) 설정을 이해합니다.
-
-[주요 동작]
-1. TensorRT 엔진 생성에 필요한 설정 정의
-2. 입력 Tensor의 최소·최적·최대 크기 설정
-3. TensorRT 10.x용 trtexec 명령어 구성
-4. 엔진 생성 설계 정보를 JSON 파일로 저장
-
-[주의사항]
-- 실제 TensorRT 엔진을 생성하거나 실행하지 않습니다.
-- TensorRT 10.x와 11.x의 정밀도 옵션 차이를 구분합니다.
-- 실제 하드웨어에서 검증하지 않은 성능값은 기록하지 않습니다.
+TensorRT 10.x 환경에서 ONNX 모델을 엔진 파일(.plan)로 빌드하기 위한 CLI 명령어를 설계합니다.
+동적 배치(Dynamic Shape: 1, 4, 8) 및 FP16 반정밀도 가속 옵션을 trtexec 인자로 구성합니다.
+버전 호환성(TRT 10.x의 --fp16과 TRT 11.x의 변경점)을 주석 및 매니페스트로 명시합니다.
 """
 
 from pathlib import Path
@@ -37,18 +24,6 @@ lesson = json.loads(
 # ============================================================
 # 1. TensorRT 엔진 생성 설정
 # ============================================================
-
-# status           : 설계만 수행한다는 의미
-# tensorrt_major   : TensorRT 메이저 버전 (10.x)
-# input_name       : ONNX 모델의 입력 Tensor 이름
-# dtype            : 입력 데이터의 자료형
-#
-# min : 최소 Batch 1개, RGB 3채널, 224×224
-# opt : 최적화 기준 Batch 4개, RGB 3채널, 224×224
-# max : 최대 Batch 8개, RGB 3채널, 224×224
-#
-# hardware_verified=False : 실제 하드웨어에서 검증하지 않음
-# engine_sha256=None      : 생성된 엔진 파일이 없으므로 해시값 없음
 manifest = {
     'status': 'DESIGN_ONLY',
     'tensorrt_major': 10,
@@ -61,67 +36,19 @@ manifest = {
     'engine_sha256': None
 }
 
-
 # ============================================================
 # TODO A06: TensorRT 10.x용 trtexec 명령어 구성
 # ============================================================
-#
-# [요구사항]
-#
-# 1. TensorRT의 명령줄 도구인 trtexec을 사용하여
-#    ONNX 모델을 추론 엔진으로 변환하는 명령어를 구성하세요.
-#
-# 2. command 변수에 명령어 구성 요소를 문자열 리스트로 작성하세요.
-#    - 첫 번째 요소는 "trtexec"입니다.
-#    - 각 옵션은 별도의 문자열로 작성합니다.
-#    - 실제 명령어를 실행하지 않습니다.
-#
-# 3. 다음 옵션들을 포함하세요.
-#
-#    --onnx
-#       → 변환할 ONNX 모델의 파일 경로 지정
-#
-#    --saveEngine
-#       → 생성할 TensorRT 엔진의 저장 경로 지정
-#
-#    --minShapes
-#       → 최소 입력 Shape 설정
-#       → images:1x3x224x224
-#
-#    --optShapes
-#       → 엔진 최적화의 기준 입력 Shape 설정
-#       → images:4x3x224x224
-#
-#    --maxShapes
-#       → 최대 입력 Shape 설정
-#       → images:8x3x224x224
-#
-#    --fp16
-#       → TensorRT 10.x에서 FP16 연산 최적화를 허용하는 옵션
-#       → TensorRT 11.x에서는 제거된 옵션이므로 사용하지 않음
-#
-# 4. Shape는 [Batch, Channel, Height, Width] 순서입니다.
-#    - Batch : 한 번에 처리하는 이미지 수
-#    - Channel : RGB 이미지이므로 3
-#    - Height : 이미지 높이 224
-#    - Width : 이미지 너비 224
-#
-# 5. command 리스트의 명령어가 실제로 실행되는 것이 아니라
-#    JSON 파일에 기록된다는 점을 확인하세요.
-#
-# [주의사항]
-# - ONNX 모델은 해당 입력 이름과 동적 Batch를 지원해야 합니다.
-# - 입력 dtype=float32와 FP16 연산 허용은 서로 다른 설정입니다.
-# - 엔진 파일을 실제로 생성하거나 성능을 측정하지 않습니다.
-# - 설치된 TensorRT 버전에 맞는 옵션인지 확인해야 합니다.
-#
-# [기대 결과]
-# command 리스트를 공백으로 연결했을 때
-# TensorRT 10.x용 엔진 생성 명령어가 출력되어야 합니다.
-# ============================================================
-
-command = []  # TODO: trtexec 명령어와 옵션을 순서대로 작성
-
+# TensorRT 10.x trtexec 명령 도구에 전달할 변환 인자(ONNX 경로, 저장 경로, 동적 크기, FP16)를 정의합니다.
+command = [
+    'trtexec',
+    '--onnx=model.onnx',
+    '--saveEngine=model.plan',
+    '--minShapes=images:1x3x224x224',
+    '--optShapes=images:4x3x224x224',
+    '--maxShapes=images:8x3x224x224',
+    '--fp16'
+]
 # TODO 끝 A06
 
 
