@@ -19,19 +19,21 @@ $guard$;
 SET search_path TO public;
 
 -- @step E1_PING expect=00000 capture=- reconnect=false
+-- 1. "DB 서버와 내 컴퓨터가 잘 연결되었나요?" 하고 신호를 찔러보는 핑(Ping) 테스트입니다. 1이 나오면 연결 성공입니다.
 SELECT 1 AS connected;
 
 -- @step E1_DB expect=00000 capture=- reconnect=false
 -- BEGIN TASK B01_01
--- TODO B01_01
--- 현재 연결한 DB 이름을 반환하는 함수를 넣으세요. 기대 이름은 knowledge_lab입니다.
--- 힌트: current_database(). 이 명령은 새 DB에 접속하는 명령이 아닙니다.
-SELECT __TODO_DB_FUNCTION__ AS database_name;
+-- TODO B01_01: 현재 연결한 DB 이름을 반환하는 함수를 넣으세요. 기대 이름은 knowledge_lab입니다.
+-- 2. "내가 지금 작업 중인 데이터베이스(엑셀 파일) 이름이 뭐죠?"를 확인합니다. 엉뚱한 DB를 건드리지 않도록 knowledge_lab인지 검사합니다.
+SELECT current_database() AS database_name;
 -- END TASK B01_01
 
 -- @step E1_INFO expect=00000 capture=- reconnect=false
+-- 3. "현재 로그인한 계정은 누구이고, PostgreSQL 엔진 버전은 몇 번인가요?"를 확인합니다.
 SELECT current_user AS user_name, version() AS server_version;
 
 -- @step E1_ENCODING expect=00000 capture=- reconnect=false
+-- 4. "한글 텍스트가 깨지지 않고 제대로 입출력되는가?"를 확인하기 위해 UTF-8 문자셋 인코딩을 검사합니다.
 SHOW client_encoding;
 SELECT '한글 연결 확인' AS korean_text;
