@@ -1,14 +1,23 @@
-"""실습 03. 정상 이미지 6장과 YOLO TXT 라벨을 읽습니다."""
+"""
+실습 03: YOLO 포맷 라벨 파일 읽기
+YOLO 라벨 파일(TXT)을 한 줄씩 읽어서 정규화된 좌표를 해석합니다.
+각 줄은 '클래스 중심X 중심Y 너비 높이' 순서(0에서 1 사이 비율)입니다.
+"""
 from pathlib import Path
+import os
 import cv2
+
 BASE = Path(__file__).resolve().parent
+os.chdir(BASE)
+
 names = ["square", "circle", "triangle"]
 for image_path in sorted((BASE / "data/images/train").glob("*.png"))[:6]:
-    image = cv2.imread(str(image_path))
+    # 이미지 파일명을 상대 경로로 읽습니다.
+    image = cv2.imread(f"data/images/train/{image_path.name}")
     label_path = BASE / "data/labels/train" / (image_path.stem + ".txt")
     # >>> B04
-    # 요구: UTF-8 라벨 파일의 문자열을 읽고 줄 목록으로 나누세요.
-    pass  # TODO B04: 위 요구사항의 핵심 코드를 작성하세요.
+    # 텍스트 파일을 읽고 줄 단위 리스트로 분리합니다.
+    lines = label_path.read_text(encoding="utf-8").splitlines()
     # <<< B04
     print(image_path.name, "shape:", image.shape, "boxes:", len(lines))
     for line in lines:
