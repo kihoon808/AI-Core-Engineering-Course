@@ -20,14 +20,13 @@ def build_requirements():
     # 핵심: 역할을 전문가로 꾸미는 것과 정확한 근거를 제공하는 것은 다릅니다.
     # BEGIN D21-01-B01
     requirements = {
-        "role": "",         # TODO: 누구를 돕는 작성자인가?
-        "task": "",         # TODO: 어떤 질문에, 어떤 언어·길이로 답할까?
-        "input": "",        # TODO: 질문과 선택 지식
-        "constraints": "",  # TODO: 근거 범위와 예제 ID 사용 금지
-        "failure": "",      # TODO: 없는 사실을 추측하지 않는 처리
-        "output": "",       # TODO: 출력할 네 필드 이름
+        "role": "초보 수강생의 실습 도움말 작성자", # 도메인 전문성과 사용자 대상
+        "task": "제공된 지식으로 질문에 한국어 2문장 이내로 답합니다.", # 답변의 언어 및 길이 제약 명시
+        "input": "사용자 질문과 선택한 지식 목록", # 인풋 데이터 범위 한정
+        "constraints": "제공된 근거만 사용하고 예제 ID를 답에 복사하지 않습니다.", # 외부 추론 금지 및 Few-shot 예제 ID 복사 방지 규칙 명시
+        "failure": "답을 뒷받침하는 사실이 없으면 정보 부족을 명시합니다.", # 사실 미확인시 정보 부족 상태를 선언
+        "output": "status, answer, source_ids, missing_information 네 필드 JSON",
     }
-    raise NotImplementedError("D21-01-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
     # END D21-01-B01
     return requirements
 
@@ -37,16 +36,15 @@ def build_prompt(question, rows, requirements):
     # 완료 기준: 질문·지식 원문·네 필드 약속이 prompt에 있으며 $question이 남지 않습니다.
     # 핵심: 지식 본문은 데이터입니다. Template 대입은 코드 실행 또는 보안 권한 부여가 아닙니다.
     # BEGIN D21-01-B02
-    context_json = json.dumps([], ensure_ascii=False)  # TODO: rows
+    context_json = json.dumps(rows, ensure_ascii=False)
     # JSON 중괄호와 충돌하지 않도록 $변수 형식인 Template을 사용합니다.
     template = Template("[역할] $role\n[작업] $task\n[입력] $input\n[질문] $question\n[지식 데이터] $context_json\n[제약] $constraints\n[실패] $failure\n[출력] $contract")
     prompt = template.substitute(
         **requirements,
-        question="",           # TODO: question
-        context_json="",       # TODO: 위 context_json
+        question=question,
+        context_json=context_json,
         contract=CONTRACT_TEXT,
     )
-    raise NotImplementedError("D21-01-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
     # END D21-01-B02
     return prompt
 
@@ -58,11 +56,10 @@ def main():
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: outputs/requirements.json 및 prompt.txt 생성. 아직 실제 모델 품질 결과는 없습니다.
     # BEGIN D21-01-B03
-    assert len(requirements) == 6
-    # TODO: prompt에 질문과 '개인 폴더'가 있는지 확인하세요.
-    write_json(HERE / "outputs" / "requirements.json", {})  # TODO: requirements
-    write_text(HERE / "outputs" / "prompt.txt", "")        # TODO: prompt
-    raise NotImplementedError("D21-01-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    assert len(requirements) == 6 and all(requirements.values())
+    assert "파일을 어디에 보관하나요?" in prompt and "개인 폴더" in prompt
+    write_json(HERE / "outputs" / "requirements.json", requirements)
+    write_text(HERE / "outputs" / "prompt.txt", prompt)
     # END D21-01-B03
     print("[01] Prompt 요구사항과 원문 저장 완료. 모델 결과가 아닙니다.")
 
