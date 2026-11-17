@@ -13,6 +13,12 @@ __pycache__/
 .pytest_cache/
 *.joblib
 
+# Environment & Secrets
+.env
+.env.*
+*.env
+!.env.example
+
 # IDE & Editor settings
 .vscode/
 .idea/
