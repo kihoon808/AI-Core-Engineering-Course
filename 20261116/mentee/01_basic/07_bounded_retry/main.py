@@ -16,15 +16,16 @@ def repair_prompt(original, error):
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: unknown_source는 자동 형식 수정 요청을 만들지 않습니다.
     # BEGIN D21-07-B01
+    # 복구 가능한 형식 오류에 한정된 안전한 피드백 메시지 매핑
     safe = {
-        "json_error":"",    # TODO: JSON 문법/코드 블록 관련 짧은 안내
-        "schema_error":"",  # TODO: 필수 필드·자료형·길이 안내
+        "json_error": "JSON 객체 하나를 코드 블록 없이 출력하세요.",
+        "schema_error": "필수 필드·자료형·길이를 지키세요. source_ids는 양의 정수 목록입니다.",
     }
+    # 참조 위반이나 환각 등의 비형식 오류는 자동 재시도 대상에서 제외
     if error not in safe:
         raise ValueError("형식 오류만 수정 요청을 만듭니다")
-    repaired = original + "\n[수정 요청] " + ""  # TODO: safe[error], 같은 질문·지식·계약 유지
-    # 이전 원문 전체, traceback, 비밀 값은 붙이지 않습니다.
-    raise NotImplementedError("D21-07-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 기존 프롬프트에 간결한 교정 지시문 추가 (질문/지식/계약은 동일하게 유지)
+    repaired = original + "\n[수정 요청] 같은 질문·지식·계약을 유지하세요. " + safe[error] + " 부족한 사실은 만들지 마세요."
     # END D21-07-B01
     return repaired
 
@@ -35,18 +36,26 @@ def run_with_retry(generate, prompt, validate):
     # 핵심: 성공 반환은 자동 구조·참조 통과일 뿐입니다. 근거를 맞게 읽었는지 사람 검토가 남습니다.
     # BEGIN D21-07-B02
     history = []
-    for attempt in (1,2):
+    # Bounded Retry: 최대 2회 시도로 상한 고정 (Attempt 1 + Attempt 2)
+    for attempt in (1, 2):
         raw = generate(prompt)
         obj, error = validate(raw)
-        history.append({"attempt":attempt,"error":error,"raw_text":raw,"prompt_sha256":sha_text(prompt)})
-        if False:  # TODO: error is None일 때 즉시 obj, history 반환
+        history.append({
+            "attempt": attempt,
+            "error": error,
+            "raw_text": raw,
+            "prompt_sha256": sha_text(prompt),
+        })
+        # 검증 통과 시 조기 반환 (정상 답변 및 정상 부족 상태 포함)
+        if error is None:
             return obj, history
-        if False:  # TODO: 형식 오류가 아니거나 2회째라면 break
+        # 형식 오류(JSON/Schema)가 아니거나 이미 최대 시도(2회)에 도달한 경우 즉시 중단
+        if error not in {"json_error", "schema_error"} or attempt == 2:
             break
-        # TODO: 다음 시도 전에만 repair_prompt를 호출
-        prompt = prompt
-    # TODO: 끝까지 실패하면 None, history를 반환. 아래 raise는 완성 후 삭제합니다.
-    raise NotImplementedError("D21-07-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+        # 2회차 시도를 위한 교정 프롬프트 생성
+        prompt = repair_prompt(prompt, error)
+    # 재시도 소진 후에도 통과하지 못하면 None 반환
+    return None, history
     # END D21-07-B02
 
 def main():
@@ -55,11 +64,11 @@ def main():
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: 복구 성공·연속 실패·규칙 중단·부족 정상 종료 네 경우.
     # BEGIN D21-07-B03
+    # 4가지 픽스처 시나리오 실행
     results = run_fixture_scenarios(fixtures, runner=run_with_retry)
-    calls = []  # TODO: results의 calls 목록
-    # TODO: [2,2,1,1]과 비교
-    write_json(HERE/"outputs"/"retry_results.json", {"source_mode":"fixture","results":[]})  # TODO: results
-    raise NotImplementedError("D21-07-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 호출 수 불변조건 검증: 복구 성공(2), 연속 실패(2), 규칙 중단(1), 정상 부족(1)
+    assert [x["calls"] for x in results] == [2, 2, 1, 1]
+    write_json(HERE / "outputs" / "retry_results.json", {"source_mode": "fixture", "results": results})
     # END D21-07-B03
     print("[07] 제어 흐름만 검증했습니다. 실제 모델 복구율은 측정하지 않았습니다.")
 

@@ -17,17 +17,20 @@ def select_context(rows, selected_ids):
     # 완료 기준: 102만 포함한 JSON. 없는 ID는 ValueError. 순서가 바뀌면 문맥도 달라집니다.
     # 핵심: ID 선택과 직렬화일 뿐 의미 검색·RAG를 구현한 것이 아닙니다.
     # BEGIN D21-04-B01
-    by_id = {row["id"]:row for row in rows}
+    # ID 기반 빠른 조회를 위한 해시 맵 생성
+    by_id = {row["id"]: row for row in rows}
+    # 원본 데이터 스냅샷의 ID 중복 무결성 검증
     if len(by_id) != len(rows):
         raise ValueError("중복 ID를 확인하세요")
-    ids = list(dict.fromkeys(selected_ids))  # 중복 선택은 첫 순서만 남김
+    # 선택된 ID 목록의 중복 제거 및 최초 입력 순서 보존
+    ids = list(dict.fromkeys(selected_ids))
+    # 존재하지 않는 ID 요청 시 즉시 예외 발생
     if any(i not in by_id for i in ids):
         raise ValueError("선택한 ID가 없습니다")
-    chosen = []
-    for knowledge_id in ids:
-        chosen.append(None)  # TODO: by_id[knowledge_id]
-    context_json = json.dumps([], ensure_ascii=False)  # TODO: chosen
-    raise NotImplementedError("D21-04-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 순서가 보존된 지식 객체 리스트 추출
+    chosen = [by_id[i] for i in ids]
+    # UTF-8 한글 문자열을 보존하는 JSON 직렬화
+    context_json = json.dumps(chosen, ensure_ascii=False)
     # END D21-04-B01
     return chosen, context_json
 
@@ -37,11 +40,13 @@ def calculate_budget():
     # 완료 기준: available_for_context=4936
     # 핵심: 실제 모델 최대 길이나 측정 결과가 아닙니다. 입력 형식을 포함한 실제 token 측정은 별도입니다.
     # BEGIN D21-04-B02
-    parts = {"window":8192,"instructions_question":800,"examples":600,"output_reserve":1600,"margin":256}
-    available = 0  # TODO: window에서 지시·질문, 예제, 출력 예약, 여유를 뺍니다.
-    result = {"source":"hypothetical_budget_not_model_measurement", "parts":parts, "available_for_context":available}
-    # TODO: 결과 4936과 비교. len(text)를 token 수라고 부르지 마세요.
-    raise NotImplementedError("D21-04-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 고정 컨텍스트 윈도우 및 선점 예산 파라미터 정의
+    parts = {"window": 8192, "instructions_question": 800, "examples": 600, "output_reserve": 1600, "margin": 256}
+    # 가용 컨텍스트 예산 = 전체 윈도우 - (지시문/질문 + 예제 + 최대 출력 예약 + 안전 마진)
+    available = parts["window"] - parts["instructions_question"] - parts["examples"] - parts["output_reserve"] - parts["margin"]
+    result = {"source": "hypothetical_budget_not_model_measurement", "parts": parts, "available_for_context": available}
+    # 계산된 잔여 예산 4,936 토큰 검증 (8192 - 3256 = 4936)
+    assert available == 4936
     # END D21-04-B02
     return result
 
@@ -53,15 +58,15 @@ def main():
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: 포함 [102], 제외 101·103. 실제 입력 원문을 보존합니다.
     # BEGIN D21-04-B03
-    included_ids = []  # TODO: chosen의 id 목록
-    excluded = []
-    for row in rows:
-        if row["id"] not in included_ids:
-            excluded.append({"id":row["id"], "reason":""})  # TODO: 제외 이유
-    manifest = {"context_version":"knowledge_v1", "included_ids":included_ids, "excluded":excluded, "budget":budget}
-    write_text(HERE/"outputs"/"context.json", "")  # TODO: context_json
-    write_json(HERE/"outputs"/"context_manifest.json", manifest)
-    raise NotImplementedError("D21-04-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 선택된 ID 목록 추출
+    included_ids = [r["id"] for r in chosen]
+    # 제외된 ID 목록 및 명시적 제외 사유 기록
+    excluded = [{"id": r["id"], "reason": "이번 서버 실행 질문에서 선택하지 않음"} for r in rows if r["id"] not in included_ids]
+    # 컨텍스트 매니페스트 메타데이터 생성
+    manifest = {"context_version": "knowledge_v1", "included_ids": included_ids, "excluded": excluded, "budget": budget}
+    # 산출물 파일 영속화
+    write_text(HERE / "outputs" / "context.json", context_json)
+    write_json(HERE / "outputs" / "context_manifest.json", manifest)
     # END D21-04-B03
     print("[04] Context와 가상 예산 저장 완료. token 실측·검색 결과가 아닙니다.")
 

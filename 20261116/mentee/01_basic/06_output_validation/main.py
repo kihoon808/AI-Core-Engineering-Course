@@ -19,15 +19,15 @@ def make_model():
     # 완료 기준: 문자열 ID "101", bool true, 추가 필드, 501자 답을 거부합니다.
     # 핵심: 모델 정의는 로컬 검증입니다. 실제 LLM의 생성 형식을 자동 제약하는 API 설정은 아닙니다.
     # BEGIN D21-06-B01
+    # 정수 강제(문자열 ID/불리언 형변환 차단) 및 양의 정수(gt=0) 제약
     SourceID = Annotated[int, Field(strict=True, gt=0)]
     class KnowledgeAnswer(BaseModel):
+        # 미정의 필드 주입 차단 및 엄격한 타입 검사(형변환 금지)
         model_config = ConfigDict(extra="forbid", strict=True)
         status: Literal["answered", "insufficient_context"]
-        answer: str = Field(min_length=1, max_length=1)  # TODO: 최대 500
-        source_ids: list[SourceID] = Field(max_length=1) # TODO: 최대 3
-        missing_information: str = Field(max_length=1) # TODO: 최대 200
-    # 기본값을 추가하지 마세요. 네 필드 모두 필수입니다.
-    raise NotImplementedError("D21-06-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+        answer: str = Field(min_length=1, max_length=500)
+        source_ids: list[SourceID] = Field(max_length=3)
+        missing_information: str = Field(max_length=200)
     # END D21-06-B01
     return KnowledgeAnswer
 
@@ -38,15 +38,16 @@ def parse_answer(raw):
     # 완료 기준: 깨진 JSON→json_error, {} 또는 문자열 출처→schema_error.
     # 핵심: 형변환을 허용해 잘못된 출처를 억지로 정수로 만들지 않습니다.
     # BEGIN D21-06-B02
+    # Gate 1: JSON 문법 검증
     try:
-        data = strict_json(raw)  # 크기·중복 키 보호는 제공 함수
+        data = strict_json(raw)
     except (ValueError, RecursionError):
-        return None, ""         # TODO: json_error
+        return None, "json_error"
+    # Gate 2: Pydantic Schema 구조 및 자료형 검증
     try:
-        obj = None              # TODO: Model.model_validate(data)
+        obj = Model.model_validate(data)
     except ValidationError:
-        return None, ""         # TODO: schema_error
-    raise NotImplementedError("D21-06-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+        return None, "schema_error"
     # END D21-06-B02
     return obj,None
 
@@ -57,21 +58,27 @@ def check_rules(obj, provided_ids):
     # 핵심: ID 포함 검사는 근거 문장의 의미적 뒷받침을 증명하지 않습니다.
     # BEGIN D21-06-B03
     ids = obj.source_ids
+    # 출처 ID 중복 여부 확인
     if len(ids) != len(set(ids)):
         return "duplicate_source"
-    if False:  # TODO: ids가 provided_ids의 부분집합이 아닌가?
+    # 제공된 지식 컨텍스트 범위 외의 날조된 ID 참조 차단
+    if not set(ids) <= set(provided_ids):
         return "unknown_source"
+    # 상태별 필수 조합 규칙 검증
     if obj.status == "answered":
-        if False:  # TODO: 출처가 없거나 missing_information이 빈 문자열이 아닌가?
+        # answered 상태인데 출처가 없거나 결손 정보가 비어 있지 않은 경우
+        if not ids or obj.missing_information != "":
             return "status_rule"
     else:
-        if False:  # TODO: 출처가 있거나 부족한 정보명이 없는가?
+        # insufficient_context 상태인데 출처가 남아 있거나 결손 정보명이 공백인 경우
+        if ids or not obj.missing_information.strip():
             return "status_rule"
+    # 공백 답변 차단
     if not obj.answer.strip():
         return "blank_answer"
+    # 정보 부족 시 규정된 고정 문구 일치 검증
     if obj.status == "insufficient_context" and obj.answer != INSUFFICIENT:
         return "status_rule"
-    raise NotImplementedError("D21-06-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
     # END D21-06-B03
     return None
 
@@ -91,14 +98,18 @@ def main():
     results = []
     for item in fixtures:
         obj, error = validate_answer(item["raw_text"], item["provided_ids"])
-        results.append({"fixture_id":item["fixture_id"],"source_mode":"fixture",
-                        "error":error,"expected_error":item["expected_error"],
-                        "matches_expected":False,  # TODO: error와 expected_error 비교
-                        "evidence_ok":None})
-    # TODO: 각 행의 matches_expected가 True인지 확인
-    write_json(HERE/"outputs"/"fixture_results.json", results)
-    write_json(HERE/"outputs"/"answer_schema.json", {})  # TODO: model_json_schema()
-    raise NotImplementedError("D21-06-B04: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+        results.append({
+            "fixture_id": item["fixture_id"],
+            "source_mode": "fixture",
+            "error": error,
+            "expected_error": item["expected_error"],
+            "matches_expected": error == item["expected_error"],
+            "evidence_ok": None,
+        })
+    # 26개 fixture 전원 기대 오류 일치 검증
+    assert all(r["matches_expected"] for r in results)
+    write_json(HERE / "outputs" / "fixture_results.json", results)
+    write_json(HERE / "outputs" / "answer_schema.json", make_model().model_json_schema())
     # END D21-06-B04
     print("[06] 로컬 검증 완료. 구조·참조 검사와 실제 근거 평가는 다릅니다.")
 

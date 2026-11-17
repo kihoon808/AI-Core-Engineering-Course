@@ -20,14 +20,17 @@ def choose_bundle(bundle_path=None):
     # 완료 기준: 05 outputs/dev_01/frozen_bundle.json을 선택적으로 지정. 원문을 바꾸지 않습니다.
     # 핵심: 마지막 프로젝트는 기존 흐름을 다시 연결합니다. 새 API·DB·벡터 검색을 만들지 않습니다.
     # BEGIN D21-08-B01
+    # 05 실습에서 생성된 frozen_bundle이 지정되지 않은 경우 표준 독립 시작점 번들 생성
     if bundle_path is None:
-        bundle = make_bundle()  # 앞 교시 미완성자를 위한 제공 체크포인트
-        print("[독립 시작점] 실제 D 실험을 개선한 결과가 아닙니다.")
+        bundle = make_bundle()
+        print("[독립 시작점] 제공 A/B를 사용합니다. D에서 개선한 결과라고 주장하지 않습니다.")
     else:
-        bundle = {}  # TODO: read_json(bundle_path)
-    # TODO: context_version, schema_version, A/B 버전의 존재를 확인
-    # H 결과를 보고 이 파일을 덮어쓰지 마세요.
-    raise NotImplementedError("D21-08-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+        bundle = read_json(bundle_path)
+    # 문맥 스냅샷 및 스키마 버전의 유효성 검증
+    if bundle["context_version"] != "knowledge_v1" or bundle["schema_version"] != "answer_schema_v1":
+        raise ValueError("수업의 문맥·출력 계약 버전을 확인하세요")
+    # A/B 2개 버전 변인 쌍 검증
+    assert set(bundle["variants"]) == {"A", "B"}
     # END D21-08-B01
     return bundle
 
@@ -36,10 +39,13 @@ def choose_cases():
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: A/B 각 3질문, 첫 응답 총 6개. H03의 세 근거를 임의로 줄이지 않습니다.
     # BEGIN D21-08-B02
-    cases = read_json(DATA/"holdout_v1.json")
-    expected_ids = []  # TODO: H01, H02, H03
-    # TODO: 세 질문과 선택 ID를 확인. expected_behavior를 Prompt에 넣지 않습니다.
-    raise NotImplementedError("D21-08-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 최종 홀드아웃(Holdout) 평가 데이터셋 로드
+    cases = read_json(DATA / "holdout_v1.json")
+    # H01, H02, H03 3개 질문 식별자 및 문맥 ID 매핑 검증
+    assert [c["case_id"] for c in cases] == ["H01", "H02", "H03"]
+    assert cases[0]["selected_ids"] == [103]
+    assert cases[1]["selected_ids"] == [102]
+    assert cases[2]["selected_ids"] == [101, 102, 103]
     # END D21-08-B02
     return cases
 
@@ -48,17 +54,21 @@ def make_report(rows):
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: 정상·부족·형식 실패·참조 실패·사람 평가를 구분하고 B의 승리를 강요하지 않습니다.
     # BEGIN D21-08-B03
+    # 전체 응답 로우 기반 요약 생성
     report = summarize(rows)
-    first = []  # TODO: attempt == 1만 선택
+    # 최초 응답(attempt == 1) 격리
+    first = [r for r in rows if r["attempt"] == 1]
+    # 데일리 프로젝트 평가 메타데이터 기록 (미실행/미평가 상태를 객관적으로 보존)
     report["project"] = {
-        "name":"AI 지식 답변 생성기 v1", "first_target":len(first),
-        "not_run":0,         # TODO: 미실행 수
-        "human_pending":0,   # TODO: evidence_ok가 None인 수
-        "max_attempt":0,     # TODO: 최대 attempt
-        "completion":"실제 관찰과 근거 대조 필요",
+        "name": "AI 지식 답변 생성기 v1",
+        "first_target": len(first),
+        "not_run": sum(r["execution_state"] == "not_run" for r in first),
+        "human_pending": sum(r.get("evidence_ok") is None for r in first),
+        "max_attempt": max((r["attempt"] for r in rows), default=0),
+        "completion": "실제 관찰·근거 대조 결과를 확인하세요. 자동 만점/승자 없음",
     }
-    # TODO: max_attempt <= 2 확인. 샘플 통과를 모델 우수성으로 적지 마세요.
-    raise NotImplementedError("D21-08-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    # 최대 시도 횟수 상한(2회 이하) 불변조건 검증
+    assert report["project"]["max_attempt"] <= 2
     # END D21-08-B03
     return report
 

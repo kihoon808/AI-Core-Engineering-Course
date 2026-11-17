@@ -22,11 +22,12 @@ def choose_bundle(bundle_path=None):
     # 완료 기준: 질문·문맥·계약·예제는 같고 B의 근거 규칙 1개만 다릅니다.
     # 핵심: 02의 예제 교체 실험과 05의 근거 규칙 실험을 한 비교로 섞지 않습니다.
     # BEGIN D21-05-B01
+    # 기본 규칙 A 정의
     rule_a = BASE_RULE
-    rule_b = rule_a + "\n" + ""  # TODO: ADDED_RULE 추가
-    # 이번 A/B의 예제 유무는 둘 다 동일합니다(여기서는 0개).
+    # 규칙 B: A의 규칙을 보존하고 근거 부족 시의 제약(ADDED_RULE)만 추가 (단일 변인 통제)
+    rule_b = rule_a + "\n" + ADDED_RULE
+    # 예제 유무는 A/B 모두 동일하게 빈 리스트([])로 고정
     bundle = make_bundle(rule_a=rule_a, rule_b=rule_b, examples=[])
-    raise NotImplementedError("D21-05-B01: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
     # END D21-05-B01
     return bundle
 
@@ -35,10 +36,9 @@ def choose_cases():
     # 입력·대상: 아래 함수 인자와 제공 데이터만 사용합니다.
     # 완료 기준: 기본필수 3질문 × A/B = 첫 응답 6개. 예상 행동을 Prompt에 넣지 않습니다.
     # BEGIN D21-05-B02
-    cases = read_json(DATA/"dev_v1.json")
-    expected_ids = []  # TODO: D01, D02, D03
-    # TODO: cases의 case_id 목록과 expected_ids 대조. H는 아직 실행하지 않습니다.
-    raise NotImplementedError("D21-05-B02: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
+    cases = read_json(DATA / "dev_v1.json")
+    # 개발 세트(D01, D02, D03) 3개 질문 검증 (Holdout H01-H03은 배제)
+    assert [c["case_id"] for c in cases] == ["D01", "D02", "D03"]
     # END D21-05-B02
     return cases
 
@@ -48,18 +48,19 @@ def make_report(rows):
     # 완료 기준: 재시도 응답은 첫 응답 점수에 섞이지 않습니다. 실패를 분모에서 빼지 않습니다.
     # 핵심: None과 False는 다릅니다. 미평가를 0점으로 대체하지 않습니다.
     # BEGIN D21-05-B03
-    first = [r for r in rows if False]  # TODO: attempt == 1
+    # 재시도 응답(attempt > 1)을 배제하고 최초 응답(attempt == 1)만 분리
+    first = [r for r in rows if r["attempt"] == 1]
     counts = {}
-    for variant in ("A","B"):
-        subset = []  # TODO: first에서 이 variant 선택
+    for variant in ("A", "B"):
+        subset = [r for r in first if r["variant"] == variant]
         counts[variant] = {
-            "N":len(subset), "json_passed":0,  # TODO: json_ok is True의 수
-            "not_run":0,                      # TODO: execution_state == 'not_run'
-            "human_pending":0,                # TODO: evidence_ok is None
+            "N": len(subset),
+            "json_passed": sum(r["json_ok"] is True for r in subset),
+            "not_run": sum(r["execution_state"] == "not_run" for r in subset),
+            "human_pending": sum(r["evidence_ok"] is None for r in subset),
         }
-    report = summarize(rows)  # 세부 지표·분모는 제공된 집계기
+    report = summarize(rows)
     report["learner_first_counts"] = counts
-    raise NotImplementedError("D21-05-B03: 골격의 TODO를 채운 뒤 이 줄을 삭제하세요")
     # END D21-05-B03
     return report
 
