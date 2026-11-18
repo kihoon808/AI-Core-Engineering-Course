@@ -14,45 +14,22 @@ from day23kit.mathops import cosine_distance
 from day23kit.io import save_result
 
 
-# BEGIN D23-02-B01
 def dot(a,b):
-    """
-    TODO D23-02-B01 · dot
-        같은 위치의 숫자를 곱해 합산하는 내적을 구현하세요.
-        예: (1,0)·(0.8,0.6)=0.8. 입력 NumPy 배열 2개, 출력 float.
-    """
-    # TODO D23-02-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-02-B01: 직접 구현하세요")
-    return float(np.dot())
-# END D23-02-B01
+    # 대응하는 좌표 원소끼리 곱한 뒤 합산 (내적 계산)
+    return float(np.dot(a,b))
 
-# BEGIN D23-02-B02
 def cosine(a,b):
-    """
-    TODO D23-02-B02 · cosine
-        내적을 두 벡터 길이의 곱으로 나누어 Cosine similarity를 구하세요.
-        q=(1,0), A=(0.8,0.6)라면 0.8입니다.
-        입력: NumPy 배열 2개. 출력: float. 영벡터는 무조건 거부합니다.
-    """
-    # TODO D23-02-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-02-B02: 직접 구현하세요")
-    length_a = np.linalg.norm()
-    length_b = np.linalg.norm()
-    return dot(a, b) / (...)
-# END D23-02-B02
+    # 두 벡터의 L2 노름(길이) 계산
+    na=float(np.linalg.norm(a))
+    nb=float(np.linalg.norm(b))
+    # 영벡터 입력 시 0으로 나누기 오류 방지
+    if na<=1e-12 or nb<=1e-12:raise ValueError('zero_vector')
+    # 내적을 두 벡터 길이의 곱으로 나누어 코사인 유사도 산출
+    return dot(a,b)/(na*nb)
 
-# BEGIN D23-02-B03
 def l2(a,b):
-    """
-    TODO D23-02-B03 · l2
-        두 벡터의 좌표 차이로 L2 거리를 구하세요. 출력 float.
-        q=(1,0), A=(0.8,0.6) → sqrt(0.4) ≈ 0.6325.
-    """
-    # TODO D23-02-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-02-B03: 직접 구현하세요")
-    return float(np.linalg.norm())
-# END D23-02-B03
-
+    # 좌표 간 차이 벡터의 L2 노름(유클리드 거리) 계산
+    return float(np.linalg.norm(a-b))
 
 def run(mode,level,args):
     q=np.array([1.,0.]);a=np.array([.8,.6]);u=np.array([1.,0.]);v=np.array([10.,10.])
