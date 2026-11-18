@@ -15,48 +15,19 @@ from day23kit.embedding import get_encoder
 from day23kit.io import save_result
 
 
-# BEGIN D23-03-B01
 def make_passages(rows):
-    """
-    TODO D23-03-B01 · make_passages
-        지식 목록을 E5 문서 입력 문자열 목록으로 변환하세요.
-        문서에는 'passage: ' + 제목 + ' ' + 본문을 사용합니다.
-        한 행마다 정확히 한 문자열을 만들어 순서를 유지하세요.
-    """
-    # TODO D23-03-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-03-B01: 직접 구현하세요")
-    return [passage_text() for row in rows]
-# END D23-03-B01
+    # 각 지식 행을 E5 문서 규격('passage: 제목 본문') 문자열 목록으로 변환
+    return [passage_text(row) for row in rows]
 
-# BEGIN D23-03-B02
 def make_queries(questions):
-    """
-    TODO D23-03-B02 · make_queries
-        질문 목록 각 요소 앞에 query: 공백을 붙이세요.
-        출력: 입력과 동일한 순서의 문자열 리스트.
-        빈 질문을 추가해 그럴듯한 벡터를 만들지 마세요.
-    """
-    # TODO D23-03-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-03-B02: 직접 구현하세요")
-    return ['query: ' + '' for q in questions]
-# END D23-03-B02
+    # 각 질문 앞에 'query: ' 접두어를 결합하여 검색 질의 문자열 목록 생성
+    return ['query: ' + q for q in questions]
 
-# BEGIN D23-03-B03
 def encode_both(encoder,passages,queries):
-    """
-    TODO D23-03-B03 · encode_both
-        같은 Encoder에 문서와 질문을 나누어 encode하세요.
-        반드시 normalize_embeddings=True, convert_to_numpy=True를 전달합니다.
-        결과: (doc_vectors, query_vectors). 기본필수의 모의 모드와
-        --mode live의 E5 실측을 구분하여 같은 API를 사용합니다.
-    """
-    # TODO D23-03-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-03-B03: 직접 구현하세요")
-    docs = encoder.encode(...)
-    queries_vec = encoder.encode(...)
-    return docs, queries_vec
-# END D23-03-B03
-
+    # 동일 인코더를 사용해 문서와 질의를 정규화 단위 벡터(float32)로 인코딩
+    docs = encoder.encode(passages, normalize_embeddings=True, convert_to_numpy=True, batch_size=8)
+    queries_vec = encoder.encode(queries, normalize_embeddings=True, convert_to_numpy=True)
+    return np.asarray(docs, dtype=np.float32), np.asarray(queries_vec, dtype=np.float32)
 
 def run(mode,level,args):
     rows=load_knowledge()[:3] if level==1 else load_knowledge()
@@ -73,7 +44,6 @@ def run(mode,level,args):
         result['vectors_valid']=check_shapes_vectors(docs,queries,len(rows))
     if level>=3:result['model_contract']=make_model_stamp(encoder,mode)
     return result
-
 
 def main():
     parser=argparse.ArgumentParser(description='Day23 실습 03 · E5 문장 Embedding')
