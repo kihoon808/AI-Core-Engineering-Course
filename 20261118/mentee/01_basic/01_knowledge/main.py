@@ -12,47 +12,30 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[2] / 'common'))
 from day23kit.data import load_knowledge
 from day23kit.io import save_result
 
-
-# BEGIN D23-01-B01
 def select_original(rows):
-    """
-    TODO D23-01-B01 · select_original
-        기존 수업에서 사용한 101·102·103만 ID 오름차순으로 선택합니다.
-        입력: 전체 지식 목록(list[dict]). 출력: 원래 지식 3개를 담은 list.
-        원본 딕셔너리의 id/title/content를 수정하지 마세요.
-        개념: 원문 ID 고정·검색할 자료의 범위.
-    """
-    # TODO D23-01-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-01-B01: 직접 구현하세요")
-    return sorted()
-# END D23-01-B01
+    # 1. 101, 102, 103 ID에 해당하는 지식 데이터만 필터링
+    # 2. 원본 데이터의 불변성을 보장하기 위해 dict(r)로 얕은 복사 수행
+    # 3. ID 기준 오름차순(ascending) 정렬하여 반환
+    return sorted((dict(r) for r in rows if r.get('id') in (101, 102, 103)), key=lambda r: r['id'])
 
-# BEGIN D23-01-B02
 def make_passage_input(row):
-    """
-    TODO D23-01-B02 · make_passage_input
-        E5 문서 입력 텍스트를 "passage: 제목 본문" 형식으로 만드세요.
-        입력: 지식 한 행. 출력: 문자열. 제목과 본문을 공백 하나로 구분하세요.
-        개념: FAQ 질문과 달리 지식 본문을 검색 대상으로 사용합니다.
-    """
-    # TODO D23-01-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-01-B02: 직접 구현하세요")
-    return 'passage: ' + row[''] + ' ' + row['']
-# END D23-01-B02
+    # E5 비대칭 검색 규격: 검색 문서(문맥)에는 'passage: ' 접두어를 부여하고 제목과 본문을 단일 공백으로 연결
+    return f"passage: {row['title']} {row['content']}"
 
-# BEGIN D23-01-B03
 def make_mapping(rows):
-    """
-    TODO D23-01-B03 · make_mapping
-        각 지식의 id/title/content/category/source_version 및 passage_input을 기록하세요.
-        입력: 선택된 지식 목록. 출력: 딕셔너리 목록.
-        개념: 벡터를 생성하기 전에도 원문·ID·버전을 추적해야 합니다.
-    """
-    # TODO D23-01-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-01-B03: 직접 구현하세요")
-    return [dict('') for r in rows]
-# END D23-01-B03
-
+    # 벡터 생성 전 원문 메타데이터(id, title, content, category, source_version)와
+    # 생성된 passage_input을 함께 유지하여 데이터 추적성을 확보
+    return [
+        {
+            'id': r['id'],
+            'title': r['title'],
+            'content': r['content'],
+            'category': r['category'],
+            'source_version': r['source_version'],
+            'passage_input': make_passage_input(r),
+        }
+        for r in rows
+    ]
 
 def run(mode,level,args):
     rows=load_knowledge()
