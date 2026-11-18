@@ -15,47 +15,27 @@ from day23kit.embedding import get_encoder, encode_question
 from day23kit.db import connect_db, exact_topk, check_data_ready
 from day23kit.io import save_result
 
-
-# BEGIN D23-08-B01
 def validate_question(question):
-    """
-    TODO D23-08-B01 · validate_question
-        질문은 1자 이상의 문자열이어야 하며 앞뒤 공백을 제거하세요.
-        빈 값/공백만 있는 값이면 ValueError. 반환은 정리된 질문.
-        API가 연결되어 있지 않아도 검사 가능한 순수 함수입니다.
-    """
-    # TODO D23-08-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-08-B01: 직접 구현하세요")
+    # 질문 입력 유효성 검증(문자열 여부, 빈 공백 여부) 및 공백 제거
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError('empty_question')
     return question.strip()
-# END D23-08-B01
 
-# BEGIN D23-08-B02
-def retrieve_candidates(question,mode,k,category,env_file):
-    """
-    TODO D23-08-B02 · retrieve_candidates
-        fixture면 교육용 fixture_search, live면 E5 query Embedding → pgvector Exact SQL을 사용하세요.
-        실제 live는 exercise05에서 9개 자료를 먼저 저장해야 합니다.
-        DB 연결 실패를 빈 결과 []로 바꾸지 말고 예외를 전달하세요.
-    """
-    # TODO D23-08-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-08-B02: 직접 구현하세요")
+def retrieve_candidates(question, mode, k, category, env_file):
+    # 실행 모드에 따라 모의 검색(fixture) 또는 E5 임베딩 기반 pgvector 실측 검색 수행
     if mode == 'fixture':
-        return fixture_search()
-# END D23-08-B02
+        return fixture_search(question, k, category)
+    encoder = get_encoder('live')
+    qvec = encode_question(encoder, question)
+    with connect_db(env_file) as conn:
+        check_data_ready(conn)
+        return exact_topk(conn, qvec, k, category)
 
-# BEGIN D23-08-B03
 def format_candidates(hits):
-    """
-    TODO D23-08-B03 · format_candidates
-        후보의 id/title/content/category/source_version/distance를 반환하세요.
-        검색된 원문을 요약·변조하지 않고, distance는 숫자 그대로 둡니다.
-        답변 상태(answered)를 자동으로 부여하지 마세요.
-    """
-    # TODO D23-08-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-08-B03: 직접 구현하세요")
-    return [{'id': h[''], 'title': h[''], 'content': h['']} for h in hits]
-# END D23-08-B03
-
+    # 검색된 후보 문서들의 원문 메타데이터 및 코사인 거리를 규격화하여 반환
+    return [{'id': h['id'], 'title': h['title'], 'content': h['content'],
+             'category': h['category'], 'source_version': h['source_version'],
+             'distance': round(float(h['distance']), 6)} for h in hits]
 
 def run(mode,level,args):
     question=validate_question(getattr(args,'question','서버는 어디에서 실행하나요?'))
@@ -73,7 +53,6 @@ def run(mode,level,args):
     if level>=2:result['run_report']=make_run_report(question,hits,mode,elapsed)
     if level>=3:result['contract_check']=check_model_and_versions(hits,mode)
     return result
-
 
 def main():
     parser=argparse.ArgumentParser(description='Day23 실습 08 · AI Agent용 Retriever')

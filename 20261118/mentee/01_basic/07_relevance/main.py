@@ -14,48 +14,30 @@ from day23kit.embedding import get_encoder, encode_question
 from day23kit.db import connect_db, exact_topk, check_data_ready
 from day23kit.io import save_result
 
-
-# BEGIN D23-07-B01
 def make_casebook():
-    """
-    TODO D23-07-B01 · make_casebook
-        강의의 질문 3종과 확인할 지식 ID를 구성하세요.
-        server(102), retention(101: 보관 기간 없음), error(103/108).
-        자동 생성한 정답이 아니라 사람이 평가할 고정 기준 샘플임을 표시합니다.
-    """
-    # TODO D23-07-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-07-B01: 직접 구현하세요")
-    return [{'case_id': '', 'question': '', 'reference_ids': []}]
-# END D23-07-B01
+    # 정성 평가를 위한 교육용 고정 질문 3종 및 참조 ID 목록 구성
+    return [
+       {'case_id': 'server', 'question': '서버는 어디에서 실행하나요?', 'reference_ids': [102]},
+       {'case_id': 'retention', 'question': '실습 파일은 몇 년 동안 보관하나요?', 'reference_ids': []},
+       {'case_id': 'error', 'question': '오류를 질문할 때 무엇을 적어야 하나요?', 'reference_ids': [103, 108]},
+    ]
 
-# BEGIN D23-07-B02
-def judge_training_reference(case_id,doc_id):
-    """
-    TODO D23-07-B02 · judge_training_reference
-        교안에 미리 주어진 원문 근거로 관련/부분 관련/무관을 수동 기준표로 판정하세요.
-        server:102 관련,106 부분 관련. retention:101 부분 관련(기간 없음).
-        error:103,108 관련. 그 밖에는 무관.
-        *이 표는 사람이 만든 교육용 기준이며 모델 검색 평가점수가 아닙니다.*
-    """
-    # TODO D23-07-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-07-B02: 직접 구현하세요")
-    gold = {'server': {}, 'retention': {}, 'error': {}}
-    return gold[case_id].get(doc_id, '')
-# END D23-07-B02
+def judge_training_reference(case_id, doc_id):
+    # 케이스 및 문서 ID에 따른 교재 기준 관련도 판정 (관련, 부분 관련, 무관)
+    gold = {'server': {102: '관련', 106: '부분 관련'},
+            'retention': {101: '부분 관련'},
+            'error': {103: '관련', 108: '관련'}}
+    if case_id not in gold:
+        raise ValueError('unknown_case')
+    return gold[case_id].get(doc_id, '무관')
 
-# BEGIN D23-07-B03
-def make_review_row(case,hit):
-    """
-    TODO D23-07-B03 · make_review_row
-        질문 ID·검색된 ID·본문·거리·교재 기준 라벨을 한 행으로 만드세요.
-        distance는 정답 확률로 표현하지 않습니다.
-        human_reviewed는 False로 두어 실제 수강생의 근거 검토 전임을 표시합니다.
-    """
-    # TODO D23-07-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-07-B03: 직접 구현하세요")
-    return dict(case_id=case[''], retrieved_id=hit[''], human_reviewed=False)
-# END D23-07-B03
-
+def make_review_row(case, hit):
+    # 검색 결과와 기준 라벨을 결합한 정성 검토 행 생성 (수동 검토 플래그 기본값 False)
+    return dict(case_id=case['case_id'], query=case['question'],
+                retrieved_id=hit['id'], content=hit['content'],
+                distance=round(hit['distance'], 6),
+                teaching_reference=judge_training_reference(case['case_id'], hit['id']),
+                human_reviewed=False)
 
 def run(mode,level,args):
     cases=make_casebook()
@@ -92,7 +74,6 @@ def run(mode,level,args):
     if level>=3:result['evaluation_integrity']=check_evaluation_integrity(reviews)
     if mode=='live':conn.close()
     return result
-
 
 def main():
     parser=argparse.ArgumentParser(description='Day23 실습 07 · 검색 결과 정성평가')

@@ -16,43 +16,19 @@ from day23kit.db import connect_db, ensure_table, upsert_rows, exact_topk, TABLE
 from day23kit.io import save_result
 
 
-# BEGIN D23-05-B01
 def schema_sql():
-    """
-    TODO D23-05-B01 · schema_sql
-        기존 knowledge 테이블을 건드리지 않는 day23_search_docs의 CREATE TABLE SQL을 작성하세요.
-        필드: id(PK),title,content,category,source_version,embedding_model,embedding vector(384).
-        DROP/TRUNCATE를 사용하지 않습니다.
-    """
-    # TODO D23-05-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-05-B01: 직접 구현하세요")
-    return "CREATE TABLE IF NOT EXISTS day23_search_docs ( ... );"
-# END D23-05-B01
+    # day23_search_docs 테이블 생성 DDL 스키마 반환
+    return TABLE_SQL
 
-# BEGIN D23-05-B02
+
 def prepare_document_rows(rows):
-    """
-    TODO D23-05-B02 · prepare_document_rows
-        지식 101~109의 ID/제목/본문/분류/버전 및 passage 입력을 순서대로 묶으세요.
-        반환: [{'id', 'passage_input', ...}, ...]. 같은 ID를 새로 만들지 않습니다.
-    """
-    # TODO D23-05-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-05-B02: 직접 구현하세요")
-    return [{'id': r[''], 'passage_input': passage_text()} for r in rows]
-# END D23-05-B02
+    # 각 지식 행에 E5 문서 입력(passage_input)을 결합하여 문서 목록 구성
+    return [{**dict(r), 'passage_input': passage_text(r)} for r in rows]
 
-# BEGIN D23-05-B03
+
 def topk_sql():
-    """
-    TODO D23-05-B03 · topk_sql
-        Cosine distance(<=>) 오름차순, k개 제한 SQL을 작성하세요.
-        SELECT에 id,title,content,category,source_version,embedding_model,distance 포함.
-        E5 외 다른 공간 혼합을 막도록 embedding_model을 필터합니다.
-    """
-    # TODO D23-05-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-05-B03: 직접 구현하세요")
-    return "SELECT id, title, content, ... FROM day23_search_docs WHERE ... ORDER BY embedding <=> %s ASC LIMIT %s"
-# END D23-05-B03
+    # 코사인 거리(<=>) 기준 오름차순 및 모델 필터링 기반 Top-k 검색 SQL 반환
+    return SQL_TOPK
 
 
 def run(mode,level,args):

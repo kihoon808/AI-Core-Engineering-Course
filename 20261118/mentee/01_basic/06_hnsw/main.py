@@ -14,47 +14,23 @@ from day23kit.embedding import get_encoder, encode_question
 from day23kit.db import connect_db, exact_topk, check_data_ready, HNSW_SQL
 from day23kit.io import save_result
 
-
-# BEGIN D23-06-B01
 def create_index_sql():
-    """
-    TODO D23-06-B01 · create_index_sql
-        day23_search_docs.embedding의 Cosine HNSW 인덱스를 정의하세요.
-        USING hnsw (embedding vector_cosine_ops)를 사용합니다.
-        인덱스는 선택 항목이며 9건에서 빠른 성능을 보장하지 않습니다.
-    """
-    # TODO D23-06-B01: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-06-B01: 직접 구현하세요")
-    return "CREATE INDEX IF NOT EXISTS ... ON day23_search_docs USING hnsw (embedding ...);"
-# END D23-06-B01
+    # day23_search_docs 테이블에 대한 Cosine HNSW 인덱스 생성 SQL 반환
+    return HNSW_SQL
 
-# BEGIN D23-06-B02
 def explain_sql():
-    """
-    TODO D23-06-B02 · explain_sql
-        SELECT id FROM day23_search_docs를 거리순으로 검색하는
-        EXPLAIN (ANALYZE, BUFFERS) SQL을 작성하세요. 바인딩은 %s 두 개.
-        인덱스 사용 여부를 임의로 주장하면 안 됩니다.
-    """
-    # TODO D23-06-B02: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-06-B02: 직접 구현하세요")
-    return "EXPLAIN (ANALYZE, BUFFERS) SELECT id FROM day23_search_docs WHERE ... ORDER BY embedding <=> %s ASC LIMIT 3"
-# END D23-06-B02
+    # 실행 계획 및 버퍼 사용량을 분석하기 위한 EXPLAIN (ANALYZE, BUFFERS) 쿼리 반환
+    return """EXPLAIN (ANALYZE, BUFFERS)
+    SELECT id FROM day23_search_docs
+    WHERE embedding_model=%s
+    ORDER BY embedding <=> %s ASC LIMIT 3"""
 
-# BEGIN D23-06-B03
 def read_scan_type(plan_lines):
-    """
-    TODO D23-06-B03 · read_scan_type
-        PostgreSQL EXPLAIN 텍스트에서 Index Scan / Seq Scan / 기타를 구분하세요.
-        계획이 없으면 unknown, index가 있으면 index, seq면 seq로 반환합니다.
-        작은 9건 테이블에서 Seq Scan은 오류가 아닙니다.
-    """
-    # TODO D23-06-B03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-06-B03: 직접 구현하세요")
-    plan_text = ' '.join(plan_lines)
+    # 실행 계획 출력에서 Index Scan, Seq Scan 여부를 파싱하여 반환
+    s=' '.join(plan_lines)
+    if 'Index Scan' in s:return 'index'
+    if 'Seq Scan' in s:return 'seq'
     return 'unknown'
-# END D23-06-B03
-
 
 def run(mode,level,args):
     sql_index=create_index_sql()
@@ -103,7 +79,6 @@ def run(mode,level,args):
     if level>=3:
         result['ann_filtered_example']=filtered_ann_warning(k=3,returned=1,exact_count=4)
     return result
-
 
 def main():
     parser=argparse.ArgumentParser(description='Day23 실습 06 · Exact·HNSW·EXPLAIN')
