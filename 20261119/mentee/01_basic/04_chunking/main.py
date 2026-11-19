@@ -7,37 +7,27 @@ from coursekit.io import DATA, save_json, show_success
 
 
 def check_params(size:int,overlap:int)->None:
-    # BEGIN D24-04-B01
-    # TODO D24-04-B01 : size와 overlap을 정수로 검사하고 0 <= overlap < size를 보장합니다.
-    # 요구: 입력 변수·반환값의 자료형을 유지하고, 완료 기준은 README/expected를 참조하세요.
-    # 힌트: 이 함수의 docstring과 상위 실행 함수에 전달되는 값을 확인합니다.
-    # TODO를 완성한 뒤 아래 NotImplementedError 줄을 삭제합니다.
-    raise NotImplementedError("D24-04-B01 TODO 미완성")
-    # Overlap의 최소 허용값을 any 대신 채우세요.
-    if type(size) is not int or type(overlap) is not int or not (any<=overlap<size):
+    # 1. type(...) is int로 검사: bool(True/False)은 int의 하위 타입이라 isinstance로는 걸러지지 않음
+    # 2. 0 <= overlap < size 보장: overlap이 size 이상이면 다음 시작점이 전진하지 못해 무한 루프 발생
+    if type(size) is not int or type(overlap) is not int or not (0<=overlap<size):
         raise ValueError('invalid chunk size or overlap')
-    # END D24-04-B01
 def make_windows(text:str,size:int,overlap:int)->list[dict]:
     """본문 끝에서 반복문을 종료하지 않으면 겹친 꼬리 청크가 생깁니다."""
-    # BEGIN D24-04-B02
-    # TODO D24-04-B02 : start·end·text가 있는 Chunk 목록을 만들고 본문 끝에 닿으면 종료합니다.
-    # 요구: 입력 변수·반환값의 자료형을 유지하고, 완료 기준은 README/expected를 참조하세요.
-    # 힌트: 이 함수의 docstring과 상위 실행 함수에 전달되는 값을 확인합니다.
-    # TODO를 완성한 뒤 아래 NotImplementedError 줄을 삭제합니다.
-    raise NotImplementedError("D24-04-B02 TODO 미완성")
+    # 1. 슬라이딩 윈도우 시작 전에 파라미터부터 검증
     check_params(size,overlap)
     spans=[]
     start=0
+    # 2. 빈 문자열은 len(text)==0이라 반복문에 진입하지 않고 [] 반환
     while start<len(text):
+        # 3. 마지막 청크는 본문 길이를 넘지 않도록 min으로 end를 제한, 범위는 [start,end) (끝 제외)
         end=min(start+size,len(text))
-        # 두 any는 현재 Chunk가 원문에서 차지하는 시작·끝 위치입니다.
-        spans.append({'char_start':start,'char_end':end,'text':text[any:any]})
+        spans.append({'char_start':start,'char_end':end,'text':text[start:end]})
+        # 4. 창이 본문 끝에 닿으면 즉시 종료: 계속 돌면 이미 포함된 꼬리를 또 자른 중복 청크가 생김
         if end==len(text):
             break
-        # 다음 시작점은 현재 끝점에서 Overlap만큼 되돌아간 위치입니다.
-        start=any
+        # 5. 다음 시작점은 현재 끝에서 overlap만큼 되돌아간 위치 (인접 청크가 overlap만큼 겹침)
+        start=end-overlap
     return spans
-    # END D24-04-B02
 def main():
     text='가'*71
     chunks=make_windows(text,size=40,overlap=10)
@@ -46,3 +36,10 @@ def main():
     show_success('04 Basic',out)
 
 if __name__=='__main__':main()
+
+"""
+[실습 04 요약: 청킹(Chunking)의 Size와 Overlap]
+1. 문자 단위 슬라이딩 윈도우로 [start,end) 범위를 잘라 청크를 만들며, 다음 시작점은 end-overlap으로 되돌아가 인접 청크가 겹치게 합니다.
+2. 0 <= overlap < size를 먼저 검증해야 합니다. overlap이 size 이상이면 시작점이 전진하지 못해 무한 루프에 빠지고, bool 입력은 type()으로 따로 거부합니다.
+3. 창의 end가 본문 길이에 닿는 순간 반복을 종료해야 이미 포함된 꼬리를 다시 자른 중복 청크가 생기지 않습니다(71자 입력은 [0,40) [30,70) [60,71)).
+"""
