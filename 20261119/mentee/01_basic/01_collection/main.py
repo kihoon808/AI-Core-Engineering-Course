@@ -9,26 +9,17 @@ from coursekit.documents import sha_bytes
 
 def read_raw(path:Path)->bytes:
     """입력: Path / 출력: bytes. 원본 파일은 수정하지 않습니다."""
-    # BEGIN D24-01-B01
-    # TODO D24-01-B01 : 입력 경로의 파일을 bytes로 읽어 반환합니다. 없는 파일은 명확히 실패해야 합니다.
-    # 요구: 입력 변수·반환값의 자료형을 유지하고, 완료 기준은 README/expected를 참조하세요.
-    # 힌트: 이 함수의 docstring과 상위 실행 함수에 전달되는 값을 확인합니다.
-    # TODO를 완성한 뒤 아래 NotImplementedError 줄을 삭제합니다.
-    raise NotImplementedError("D24-01-B01 TODO 미완성")
+    # 1. 파일이 실제로 존재하는지 검증하여, 없는 파일 입력 시 빈 값으로 넘기지 않고 즉시 실패 처리
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    # 2. 텍스트 디코딩(UTF-8 등)은 다음 파싱 단계의 책임이므로, 수집 단계에서는 가공 없이 원본 바이트 그대로 읽기
     return path.read_bytes()
-    # END D24-01-B01
 def build_record(doc_id:str,path:Path,raw:bytes)->dict:
     """파일명은 식별자가 아닙니다. 문서 ID와 원본 바이트 해시를 별도로 보관합니다."""
-    # BEGIN D24-01-B02
-    # TODO D24-01-B02 : 문서 ID·원문 파일명·바이트 수·SHA-256을 한 딕셔너리에 묶습니다.
-    # 요구: 입력 변수·반환값의 자료형을 유지하고, 완료 기준은 README/expected를 참조하세요.
-    # 힌트: 이 함수의 docstring과 상위 실행 함수에 전달되는 값을 확인합니다.
-    # TODO를 완성한 뒤 아래 NotImplementedError 줄을 삭제합니다.
-    raise NotImplementedError("D24-01-B02 TODO 미완성")
-    # any는 수강생이 알맞은 변수·표현식으로 교체할 자리 표시자입니다.
-    return {'doc_id':any,'filename':any,'size_bytes':len(any),
-                'raw_sha256':sha_bytes(any)}
-    # END D24-01-B02
+    # 1. 파일명은 변경되거나 중복될 수 있으므로, 시스템 내부 추적용 doc_id를 별도 키로 보관
+    # 2. len(raw)는 텍스트 글자 수가 아닌 실제 바이트 크기이며, raw_sha256은 원본 변조 여부를 판별하는 지문 역할
+    return {'doc_id':doc_id,'filename':path.name,'size_bytes':len(raw),
+            'raw_sha256':sha_bytes(raw)}
 def main():
     path=DATA/'raw'/'assignment.txt'
     raw=read_raw(path)
@@ -38,3 +29,10 @@ def main():
     show_success('01 Basic',out)
 
 if __name__=='__main__':main()
+
+"""
+[실습 01 요약: 원문 수집(Document Collection)]
+1. 데이터 수집 단계에서는 인코딩 변환이나 파싱을 섞지 않고 원본 파일을 순수 바이트(bytes) 상태로 읽어 무결성을 보존합니다.
+2. 파일이 존재하지 않는 등 실패 지점은 빈 결과로 우회하지 않고 FileNotFoundError 예외를 발생시켜 명확히 차단합니다.
+3. 파일명은 고유 식별자가 아니므로 문서 ID(doc_id), 바이트 크기(size_bytes), 원본 바이트의 SHA-256 해시값을 함께 기록해 데이터 추적과 변경 감지에 활용합니다.
+"""
