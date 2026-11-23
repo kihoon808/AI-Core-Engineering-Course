@@ -36,22 +36,30 @@ def common_cases():
 
 def allowed_source_ids(included_docs):
     """입력: 실제 Context에 포함된 Document 목록 / 출력: set[int]."""
-    # BEGIN D26-07-B01
-    # TODO D26-07-B01: included_docs의 metadata에서 citation_id를 모아 set으로 반환합니다.
-    # 힌트: Document 목록을 순회하고 doc.metadata["citation_id"]를 읽으세요. 검색 후보 목록은 사용하지 않습니다.
-    # 아래 NotImplementedError를 지우고 이 블록을 완성하세요.
-    raise NotImplementedError("D26-07-B01 TODO 미완성")
-    # END D26-07-B01
+    # 실제 Context에 포함된 문서들의 metadata에서만 citation_id를 수집하여 허용 출처 집합을 구성
+    return {doc.metadata["citation_id"] for doc in included_docs}
 
 
 def inspect_case(case, provided_ids):
     """검증 결과를 JSON으로 기록합니다. 원문 의미의 참/거짓은 자동 판정하지 않습니다."""
-    # BEGIN D26-07-B02
-    # TODO D26-07-B02: receive_bundle로 검사한 결과를 accepted/rejected 형식으로 기록합니다.
-    # 힌트: 성공 시 KnowledgeAnswer.model_dump(), RagServiceError 시 str(exc)를 사용합니다. 반환 Key는 docstring 아래 호출부와 expected를 확인하세요.
-    # 아래 NotImplementedError를 지우고 이 블록을 완성하세요.
-    raise NotImplementedError("D26-07-B02 TODO 미완성")
-    # END D26-07-B02
+    # receive_bundle로 수신 상태, 파싱, 자료형 및 허용 출처(provided_ids) 규칙을 순차 검증
+    try:
+        validated = receive_bundle(case["bundle"], provided_ids)
+        return {
+            "case": case["name"],
+            "outcome": "accepted",
+            "error": None,
+            "result": validated.model_dump(),
+            "human_review_required": True,
+        }
+    except RagServiceError as exc:
+        return {
+            "case": case["name"],
+            "outcome": "rejected",
+            "error": str(exc),
+            "result": None,
+            "human_review_required": False,
+        }
 
 
 def run():
@@ -79,3 +87,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 07 핵심 요약]
+1. Context에 실제로 포함된 문서(included_docs)에서만 citation_id를 추출해 허용 출처 집합을 제한합니다.
+2. receive_bundle을 통해 수신 상태, 파싱, 자료형 및 허용 출처 여부를 순차 검증하고 accepted/rejected로 기록합니다.
+3. 자동 검증을 통과(accepted)하더라도 원문이 답변을 실제로 지지하는지(Grounding)는 사람의 별도 검토가 필요합니다.
+"""
