@@ -11,23 +11,16 @@ from coursekit.reporting import execution_record
 
 def format_hit(hit: dict) -> str:
     """Hit 한 건의 ID·위치·본문을 한 문자열 블록으로 반환합니다."""
-    # BEGIN D26-02-B01
-    # TODO D26-02-B01: [ID] 원문위치, 줄바꿈, 본문 순서로 한 블록을 만듭니다.
-    # 힌트: citation_id·source_locator·body를 읽어 f-string으로 연결합니다.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-02-B01 TODO 미완성")
-    # END D26-02-B01
+    # [인용 ID] 출처 위치 헤더 아래에 본문을 붙여 단일 근거 블록 구성
+    return f"[{hit['citation_id']}] {hit['source_locator']}\n{hit['body']}"
 
 def make_context(hits: list[dict], max_items: int = 2) -> tuple[str, list[int]]:
     """앞에서 최대 max_items건을 골라 Context와 같은 선택의 ID 목록을 반환합니다."""
-    # BEGIN D26-02-B02
-    # TODO D26-02-B02: 앞의 최대 2건에서 블록과 ID를 함께 모아 반환합니다.
-    # 힌트: 선택한 Hit마다 format_hit을 호출하고, 블록은 줄바꿈 두 개(빈 줄 하나)로 연결합니다.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-02-B02 TODO 미완성")
-    # END D26-02-B02
+    # 상위 max_items건만 선택해 빈 줄(\n\n)로 연결한 Context와 실제 포함된 ID 목록을 함께 반환
+    selected = hits[:max_items]
+    blocks = [format_hit(h) for h in selected]
+    included_ids = [h["citation_id"] for h in selected]
+    return "\n\n".join(blocks), included_ids
 
 def main():
     hit = example_hit()
@@ -44,3 +37,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 02 요약: Hit에서 Context 만들기]
+1. format_hit은 검색 결과(Hit) 한 건을 `[citation_id] source_locator`와 본문이 이어진 문자열 블록으로 변환합니다.
+2. make_context는 최대 max_items건의 Hit만 잘라 빈 줄(\n\n)로 연결하고, 실제로 Context에 포함된 citation_id 목록을 함께 반환합니다.
+3. 빈 입력일 때는 빈 문자열과 빈 목록을 반환해 가짜 근거를 채우지 않으며, 원본 hits 리스트는 변경하지 않습니다.
+"""
