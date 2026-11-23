@@ -14,25 +14,18 @@ import argparse
 # 오늘의 최소 Metadata 계약. 여섯 값 모두 입력 Hit에서 가져옵니다.
 METADATA_KEYS = ("citation_id", "chunk_id", "doc_id", "source_version", "source_locator", "category")
 
+# 단일 검색 결과(hit)의 본문과 6개 필수 메타데이터를 LangChain Document로 변환
 def to_document(hit: dict) -> Document:
     """한 Hit의 본문과 여섯 Metadata 값을 Document로 옮깁니다."""
-    # BEGIN D26-04-B01
-    # TODO D26-04-B01: 본문을 page_content로, 제공된 여섯 Key를 metadata로 옮깁니다.
-    # 힌트: Document(page_content=..., metadata=...)를 사용합니다.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-04-B01 TODO 미완성")
-    # END D26-04-B01
+    return Document(
+        page_content=hit["body"],
+        metadata={key: hit[key] for key in METADATA_KEYS},
+    )
 
+# 검색 결과 목록을 입력 순서대로 Document 리스트로 변환 (빈 입력 시 빈 리스트 반환)
 def hits_to_documents(hits: list[dict]) -> list[Document]:
     """순서대로 변환한 Document 목록을 반환합니다. 빈 입력은 빈 목록입니다."""
-    # BEGIN D26-04-B02
-    # TODO D26-04-B02: 입력 순서대로 to_document를 호출해 목록을 반환합니다.
-    # 힌트: 빈 목록도 특별한 가짜 문서 없이 그대로 빈 결과가 됩니다.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-04-B02 TODO 미완성")
-    # END D26-04-B02
+    return [to_document(hit) for hit in hits]
 
 def metadata_is_preserved(hit: dict, metadata: dict) -> bool:
     """제공된 관찰 함수: 여섯 필드가 모두 있고 각 값이 같은지 확인합니다."""
@@ -79,3 +72,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 04 요약]
+- 검색 결과(hit dict)의 본문(body)을 page_content로, 6개 필수 출처 필드를 metadata로 옮겨 LangChain Document 객체를 생성했습니다.
+- hits_to_documents는 입력 순서를 유지하며 변환하고, 빈 목록 입력 시 빈 목록을 그대로 반환합니다.
+- 변환된 Document의 본문·메타데이터 보존 여부와 citation_id 타입(int)을 검증해 outputs/document_adapter.json에 저장했습니다.
+"""
