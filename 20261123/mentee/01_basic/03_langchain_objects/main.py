@@ -16,6 +16,7 @@ COMPONENT_INPUTS = {
     "Chat Model": "ChatPromptValue 또는 메시지 목록",
 }
 
+# 네 가지 핵심 LangChain 구성요소(Document, Retriever, Prompt, Chat Model)의 반환 자료형 매핑
 def component_outputs() -> dict[str, str]:
     """강의에서 다룬 네 구성요소의 출력 자료형을 대응시킵니다."""
     return {
@@ -25,6 +26,7 @@ def component_outputs() -> dict[str, str]:
         "Chat Model": "AIMessage",
     }
 
+# 단순 데이터 접근(data)과 실행 인터페이스(invoke) 호출 대상 구분
 def access_kinds() -> dict[str, str]:
     """데이터를 읽는 경우와 invoke로 작업을 실행하는 경우를 구분합니다."""
     return {
@@ -34,6 +36,7 @@ def access_kinds() -> dict[str, str]:
         "Chat Model": "invoke",
     }
 
+# 구성요소별 입출력·접근 방식을 하나의 리포트로 묶어 JSON 파일로 저장
 def main():
     outputs = component_outputs()
     access = access_kinds()
@@ -49,3 +52,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 03 요약]
+- LangChain의 네 핵심 구성요소(Document, Retriever, Prompt, Chat Model)가 각각 무엇을 입력받아 어떤 타입을 반환하는지 정리했습니다.
+- Document는 본문과 메타데이터를 보관하는 단순 데이터(data)로, Retriever·Prompt·Chat Model은 invoke로 실행하는 구성요소로 구분했습니다.
+- 실제 API나 모델 호출 없이 입출력 계약 표를 생성하여 outputs/object_contracts.json에 저장했습니다.
+"""
