@@ -20,23 +20,26 @@ STAGE_CARDS = {
 
 def stage_order() -> list[str]:
     """STAGE_CARDS의 이름 다섯 개를 처리 순서대로 반환합니다."""
-    # BEGIN D26-01-B01
-    # TODO D26-01-B01: 다섯 단계의 이름을 처리 순서대로 반환합니다.
-    # 힌트: 검색 → 근거 선택 → 메시지 작성 → 생성 → 확인 순서입니다.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-01-B01 TODO 미완성")
-    # END D26-01-B01
+    # 검색 -> 근거 선택 -> 메시지 작성 -> 답변 생성 -> 출처 검증 순으로 연결
+    return [
+        "Retriever",
+        "Context Builder",
+        "Prompt",
+        "Generator",
+        "Validator · Source 연결",
+    ]
 
 def evidence_note(hit: dict) -> dict:
     """출석 문서와 사람이 읽은 판단을 함께 기록합니다. 모델 호출 결과가 아닙니다."""
-    # BEGIN D26-01-B02
-    # TODO D26-01-B02: 입력 Hit의 출처·본문과 15분 질문의 판단·예외를 한 dict로 묶습니다.
-    # 힌트: source_locator와 body를 그대로 읽고, 문서의 “까지”와 사전 승인 조건을 확인하세요.
-    # 함수의 docstring·README·expected/EXPECTED.md에서 입력과 완료 조건을 확인하세요.
-    # 구현 후 아래 NotImplementedError를 제거하세요. 정답은 이 아래에 숨겨져 있지 않습니다.
-    raise NotImplementedError("D26-01-B02 TODO 미완성")
-    # END D26-01-B02
+    # 입력 hit을 변경하지 않고 출처·본문과 15분 지각 판단 및 예외 조건을 함께 기록
+    return {
+        "citation_id": hit["citation_id"],
+        "evidence": hit["body"],
+        "source_version": hit["source_version"],
+        "source_locator": hit["source_locator"],
+        "judgment": "지각",
+        "exception_to_check": "운영실 사전 승인 예외 여부 확인",
+    }
 
 def main():
     order = stage_order()
@@ -51,3 +54,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 01 요약: RAG 단계와 근거 대조]
+1. RAG 처리 순서: Retriever -> Context Builder -> Prompt -> Generator -> Validator · Source 연결 순으로 입출력을 연결합니다.
+2. 근거 보존: 입력 Hit의 본문(body), 출처(source_locator), 버전(source_version), citation_id를 원본 변형 없이 그대로 기록합니다.
+3. 판단과 예외: 출석 문서 기준 15분 경과는 '지각'으로 판단하되, 운영실 사전 승인 예외 조건을 함께 명시해 근거 대조가 가능하게 합니다.
+"""
