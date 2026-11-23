@@ -15,24 +15,18 @@ from coursekit.reporting import execution_record, message_record
 from coursekit.io import save_json, show_success
 
 
+# Prompt 템플릿 변수명(question, context)에 맞춘 입력 딕셔너리 생성
 def make_inputs(question: str, context: str) -> dict:
     """입력: 질문·근거 문자열 / 출력: question, context 두 Key를 가진 dict."""
-    # BEGIN D26-05-B01
-    # TODO D26-05-B01: 질문과 Context를 각각 question·context Key로 묶어 반환합니다.
-    # 힌트: Dictionary의 두 Key 이름은 Prompt의 변수 이름과 같아야 합니다.
-    # 완료 후 아래 NotImplementedError를 제거하고 반환값을 확인하세요.
-    raise NotImplementedError("D26-05-B01 TODO 미완성")
-    # END D26-05-B01
+    return {"question": question, "context": context}
 
 
+# Prompt를 먼저 invoke해 ChatPromptValue를 얻고, 이를 Chat Model에 전달해 AIMessage를 반환
 def invoke_pair(prompt, chat_model, inputs: dict):
     """dict → ChatPromptValue → AIMessage. 반환: (prompt_value, message)."""
-    # BEGIN D26-05-B02
-    # TODO D26-05-B02: Prompt를 먼저 실행하고 그 반환값을 Chat Model에 전달한 뒤 두 반환값을 함께 반환합니다.
-    # 힌트: 첫 invoke의 반환값이 둘째 invoke의 입력입니다. 반환 순서는 (prompt_value, message)입니다.
-    # 완료 후 아래 NotImplementedError를 제거하고 반환값을 확인하세요.
-    raise NotImplementedError("D26-05-B02 TODO 미완성")
-    # END D26-05-B02
+    prompt_value = prompt.invoke(inputs)
+    message = chat_model.invoke(prompt_value)
+    return prompt_value, message
 
 
 def context_of(hit: dict) -> str:
@@ -85,3 +79,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+[실습 05 요약]
+- 질문과 근거 문자열을 Prompt 템플릿의 변수명(question, context)에 맞춰 딕셔너리로 구성했습니다.
+- prompt.invoke(inputs)로 ChatPromptValue를 생성하고, 이를 chat_model.invoke(prompt_value)에 전달해 AIMessage를 얻는 2단계 호출을 구현했습니다.
+- 실행 결과(프롬프트 메시지 구조, 모델 응답, 근거 원문)를 outputs/prompt_model.json에 기록했습니다.
+"""
