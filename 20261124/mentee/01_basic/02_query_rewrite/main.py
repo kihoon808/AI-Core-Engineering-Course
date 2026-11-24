@@ -4,15 +4,9 @@ import sys
 HERE=Path(__file__).resolve().parent
 ROLE_ROOT=next(p for p in HERE.parents if (p/'coursekit').is_dir())
 sys.path.insert(0,str(ROLE_ROOT))
-
-
 import argparse
-
 from coursekit.workshops import STAGE_RUNNERS
-
 from coursekit.io import save_report
-
-
 
 def apply_rewrite(question, history, offline):
     """offline이면 고정 예시, 기본 실행이면 실제 ChatPromptTemplate → Chat Model을 호출합니다."""
@@ -20,7 +14,6 @@ def apply_rewrite(question, history, offline):
     # offline=True면 고정 Fixture를, False면 실제 ChatPromptTemplate + Structured Output LLM 체인을 실행
     from coursekit.rewrite import rewrite_query
     return rewrite_query(question, history, offline=offline)
-
 
 def record_rewrite(original, result):
     """원래 질문을 검색 질문으로 덮어쓰지 않습니다."""
@@ -32,7 +25,6 @@ def record_rewrite(original, result):
         'search_query': result.search_query,
         'reason': result.reason,
     }
-
 
 def main():
     parser=argparse.ArgumentParser(description='Day27 실습 02 · 02_query_rewrite')

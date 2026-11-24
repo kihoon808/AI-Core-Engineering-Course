@@ -2,17 +2,16 @@
 
 def prepare_pipeline_request(case):
     """원 질문과 History를 함께 보존하고 검색용 질문은 Chain 내부에서 만듭니다."""
-    # BEGIN D27-06-I01
-    # TODO D27-06-I01: 원 질문과 History를 함께 보존하고 검색용 질문은 Chain 내부에서 만듭니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-06-I01 미완성")
-    # END D27-06-I01
+    # RagRequest 스키마에 맞춰 원 질문(query), 대화 이력(history), 카테고리(category)를 전달
+    return {
+        'query': case['question'],
+        'history': case.get('history', []),
+        'category': case['category'],
+    }
 
 
 def wire_langchain_pipeline(dependencies, offline):
     """LCEL는 Runnable을 준비할 뿐이고 .invoke()가 실행 시작점입니다."""
-    # BEGIN D27-06-I02
-    # TODO D27-06-I02: LCEL는 Runnable을 준비할 뿐이고 .invoke()가 실행 시작점입니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-06-I02 미완성")
-    # END D27-06-I02
+    # coursekit.pipeline.create_rag_pipeline으로 Rewrite -> Retrieval -> Rerank -> Generate LCEL 체인 조립
+    from coursekit.pipeline import create_rag_pipeline
+    return create_rag_pipeline(*dependencies, offline=offline)

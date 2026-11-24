@@ -1,12 +1,21 @@
 # 실행 기록 (직접 작성)
 
-- 선택 단계 / 실습: 
-- 실행 날짜와 Python Interpreter:
-- 실행 모드: **live / offline_fixture** (둘 중 하나를 명확히 기록)
-- 요청 질문과 Category:
-- Query Rewrite의 원 질문과 검색용 질문:
-- Candidate ID → Rerank ID → Context included ID:
+- 선택 단계 / 실습: 기본필수 / Day27 실습 01 (01_failure_diagnosis)
+- 실행 날짜와 Python Interpreter: 2026-11-24 / Python 3.13.14
+- 실행 모드: offline_fixture (`fixed_diagnostic_cases`, 실제 LLM/DB 호출 없는 고정 진단 사례)
+- 요청 질문과 Category: 고정 진단 케이스 F01-F07 (실제 질문 텍스트 대신 상태 플래그 기반 시나리오 사용)
+- Query Rewrite의 원 질문과 검색용 질문: 해당 없음 (01번 실습은 질문 변환을 호출하지 않고 상태 플래그로 실패 단계만 진단)
+- Candidate ID -> Rerank ID -> Context included ID: 해당 없음 (`gold_in_candidates`, `gold_in_context` 불리언 플래그로 대체)
 - 답변과 출처 문서의 실제 내용 대조:
-- 실패 또는 예상과 다른 결과:
+  - F01 (`ambiguous=True`): `Query Ambiguity` -> Query Rewrite 또는 구체화 요청
+  - F02 (`gold_in_candidates=False`): `Candidate Retrieval` -> 후보 검색 개선 (Reranker는 누락된 후보를 새로 찾지 않음)
+  - F03 (`gold_in_candidates=True, gold_in_context=False`): `Reranking / Context` -> Reranking 순위 및 Context 포함 기준 확인
+  - F04 (`valid_source=False`): `Source Verification` -> `source_ids` 구조 및 Grounding 검증 강화
+  - F05 (모두 정상): `Pass` -> 정상 통과
+  - F06 (`authorized=False`): `Permission / Authorization` -> 권한 및 RBAC 정책 확인
+  - F07 (`current=False`): `Freshness / Version` -> 문서 최신 버전 동기화 및 인덱스 갱신 확인
+- 실패 또는 예상과 다른 결과: 없음 (`pytest` 1개 테스트 통과, `day27_01_fixture.json` 정상 생성)
 - 고친 TODO와 이유:
-- 다음 개선 가설 (실측 전에 성공으로 단정하지 말 것):
+  - `D27-01-B01` (`diagnose_stage`): `authorized`, `current` 같은 선행 조건을 `gold_in_candidates`보다 먼저 검사해야 F06(권한 오류), F07(최신성 오류)이 `Candidate Retrieval`로 오분류되지 않음.
+  - `D27-01-B02` (`recommend_action`): 각 실패 단계에 대응하는 개선 조치를 매핑해 반환하도록 구현.
+- 다음 개선 가설 (실측 전에 성공으로 단정하지 말 것): 이후 실습(02-07)에서 실제 검색기, Reranker, LLM을 연결해 플래그가 아닌 실제 문서 ID와 점수로 각 단계 실패를 검증할 예정.

@@ -2,8 +2,14 @@
 
 def validate_trace(result):
     """원 질문·검색용 질문·후보·Context ID를 각각 확인합니다."""
-    # BEGIN D27-06-I03
-    # TODO D27-06-I03: 원 질문·검색용 질문·후보·Context ID를 각각 확인합니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-06-I03 미완성")
-    # END D27-06-I03
+    # trace에 원 질문, 검색 질문, 후보 ID, 최종 Context ID가 모두 기록되었는지 검증
+    trace = result.get('trace', {})
+    return {
+        'has_original_question': bool(trace.get('original_question')),
+        'has_search_query': bool(trace.get('search_query')),
+        'candidate_count': len(trace.get('candidate_ids', [])),
+        'included_count': len(trace.get('included_ids', [])),
+        'included_subset_of_candidates': set(trace.get('included_ids', [])).issubset(
+            set(trace.get('candidate_ids', []))
+        ),
+    }

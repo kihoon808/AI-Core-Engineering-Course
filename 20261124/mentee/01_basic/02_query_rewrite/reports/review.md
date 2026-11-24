@@ -1,12 +1,22 @@
 # 실행 기록 (직접 작성)
 
-- 선택 단계 / 실습: 
-- 실행 날짜와 Python Interpreter:
-- 실행 모드: **live / offline_fixture** (둘 중 하나를 명확히 기록)
+- 선택 단계 / 실습: 기본필수 / Day27 실습 02 (02_query_rewrite)
+- 실행 날짜와 Python Interpreter: 2026-11-24 / Python 3.13.14
+- 실행 모드: offline_fixture (`offline_fixture`, 교육용 고정 Rewrite 결과)
 - 요청 질문과 Category:
+  - Q02: "그럼 취소는 어떻게 해?"
+  - Q04: "예약 시간을 바꾸고 싶은데?"
+  - Q-ambiguous: "그거는 어떻게 해?" (Category: 시설, History 없음)
 - Query Rewrite의 원 질문과 검색용 질문:
-- Candidate ID → Rerank ID → Context included ID:
+  - "그럼 취소는 어떻게 해?" -> `ready` / "회의실 예약을 취소하는 방법은?"
+  - "예약 시간을 바꾸고 싶은데?" -> `ready` / "회의실 예약 시간을 변경하는 방법은?"
+  - "그거는 어떻게 해?" -> `clarification_required` / `""` (대화에서 대상을 확인할 수 없음)
+- Candidate ID -> Rerank ID -> Context included ID: 해당 없음 (02번 실습은 Query Rewrite 단계만 수행)
 - 답변과 출처 문서의 실제 내용 대조:
-- 실패 또는 예상과 다른 결과:
+  - Q02, Q04는 대화 History를 통해 생략된 대상("회의실 예약")을 복원하고 원 질문(`original_question`)을 덮어쓰지 않고 보존함.
+  - History가 없는 모호한 질문("그거는 어떻게 해?")은 추측하지 않고 `clarification_required`로 분기함.
+- 실패 또는 예상과 다른 결과: 없음 (`pytest` 1개 테스트 통과, `day27_02_fixture.json` 정상 생성)
 - 고친 TODO와 이유:
-- 다음 개선 가설 (실측 전에 성공으로 단정하지 말 것):
+  - `D27-02-B01` (`apply_rewrite`): `coursekit.rewrite.rewrite_query`를 호출해 `offline` 여부에 따라 고정 Fixture 또는 실제 LLM 체인을 실행하도록 구현.
+  - `D27-02-B02` (`record_rewrite`): `original_question`과 `search_query`를 별도 키로 분리해 원 질문 손실을 방지하고 `status`, `reason`을 함께 기록.
+- 다음 개선 가설 (실측 전에 성공으로 단정하지 말 것): 실제 LLM API 연동 모드(`--offline` 제외)에서도 동일한 `RewriteResult` 스키마가 유지되는지 검증 필요.

@@ -16,20 +16,19 @@ from coursekit.io import save_report
 
 def make_candidate_request(case):
     """candidate_k와 context_k는 다른 제한값입니다."""
-    # BEGIN D27-04-B01
-    # TODO D27-04-B01: candidate_k와 context_k는 다른 제한값입니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-04-B01 미완성")
-    # END D27-04-B01
+    # candidate_k(후보 검색 개수)는 Reranking을 고려해 context_k(최종 컨텍스트 개수)보다 크게 설정
+    return {
+        'query': case['question'],
+        'category': case['category'],
+        'candidate_k': 10,
+        'context_k': 3,
+    }
 
 
 def fetch_documents(retriever, payload):
     """Day26에서 배운 Runnable.invoke로 후보 Document를 받아옵니다."""
-    # BEGIN D27-04-B02
-    # TODO D27-04-B02: Day26에서 배운 Runnable.invoke로 후보 Document를 받아옵니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-04-B02 미완성")
-    # END D27-04-B02
+    # LangChain Runnable 인터페이스의 invoke()로 검색기(Retriever)에 요청 페이로드 전달
+    return retriever.invoke(payload)
 
 
 def main():
@@ -43,3 +42,10 @@ def main():
     print('보고서를 확인하고 reports/review.md에 원문 대조·실행 모드를 기록하세요.')
 
 if __name__=='__main__':main()
+
+"""
+[실습 04 전체 요약]
+1. 검색 단계의 candidate_k(후보 수)와 LLM에 전달할 context_k(최종 문맥 수)를 분리해 요청 페이로드를 구성합니다.
+2. candidate_k를 context_k보다 넉넉히 설정해야 후속 Reranking 단계에서 정답 문서를 상위로 올릴 여지가 생깁니다.
+3. LangChain Runnable.invoke()를 통해 검색기에서 후보 Document 리스트를 일관된 방식으로 조회합니다.
+"""

@@ -4,32 +4,26 @@ import sys
 HERE=Path(__file__).resolve().parent
 ROLE_ROOT=next(p for p in HERE.parents if (p/'coursekit').is_dir())
 sys.path.insert(0,str(ROLE_ROOT))
-
-
 import argparse
-
 from coursekit.workshops import STAGE_RUNNERS
-
 from coursekit.io import save_report
-
 
 
 def prepare_pipeline_request(case):
     """원 질문과 History를 함께 보존하고 검색용 질문은 Chain 내부에서 만듭니다."""
-    # BEGIN D27-06-B01
-    # TODO D27-06-B01: 원 질문과 History를 함께 보존하고 검색용 질문은 Chain 내부에서 만듭니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-06-B01 미완성")
-    # END D27-06-B01
+    # RagRequest 스키마에 맞춰 원 질문(query), 대화 이력(history), 카테고리(category)를 전달
+    return {
+        'query': case['question'],
+        'history': case.get('history', []),
+        'category': case['category'],
+    }
 
 
 def wire_langchain_pipeline(dependencies, offline):
     """LCEL는 Runnable을 준비할 뿐이고 .invoke()가 실행 시작점입니다."""
-    # BEGIN D27-06-B02
-    # TODO D27-06-B02: LCEL는 Runnable을 준비할 뿐이고 .invoke()가 실행 시작점입니다.
-    # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
-    raise NotImplementedError("D27-06-B02 미완성")
-    # END D27-06-B02
+    # coursekit.pipeline.create_rag_pipeline으로 Rewrite -> Retrieval -> Rerank -> Generate LCEL 체인을 조립
+    from coursekit.pipeline import create_rag_pipeline
+    return create_rag_pipeline(*dependencies, offline=offline)
 
 
 def main():
@@ -43,3 +37,11 @@ def main():
     print('보고서를 확인하고 reports/review.md에 원문 대조·실행 모드를 기록하세요.')
 
 if __name__=='__main__':main()
+
+"""
+[실습 06 전체 요약]
+1. 원 질문과 대화 History, 카테고리, 권한 정보를 포함한 파이프라인 입력 페이로드를 구성합니다.
+2. create_rag_pipeline()에 의존성(rewrite, search, rerank, generate)을 주입해 LCEL Runnable 체인을 조립합니다.
+3. 체인 조립 시점에는 실행되지 않으며, run_06 내부에서 .invoke(req)를 호출할 때 전체 RAG 흐름이 실행됩니다.
+4. 실행 결과에는 최종 응답과 출처(sources), 그리고 원 질문이 보존된 trace가 함께 기록됩니다.
+"""

@@ -4,20 +4,11 @@ import sys
 HERE=Path(__file__).resolve().parent
 ROLE_ROOT=next(p for p in HERE.parents if (p/'coursekit').is_dir())
 sys.path.insert(0,str(ROLE_ROOT))
-
-
 import argparse
-
 from coursekit.workshops import STAGE_RUNNERS
-
 from coursekit.io import save_report
-
-
-
 from steps import prepare_pipeline_request
-
 from steps import wire_langchain_pipeline
-
 from checks import validate_trace
 
 def main():
