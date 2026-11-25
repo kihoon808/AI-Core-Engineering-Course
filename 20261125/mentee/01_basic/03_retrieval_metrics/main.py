@@ -16,15 +16,17 @@ from coursekit.eval_report import write_json
 
 def calculate_recall(ranked: list[str], gold: list[str], k: int) -> float | None:
     """Top-k에서 찾은 Gold 개수 / 전체 Gold 개수를 계산하세요. Gold가 빈 질문은 None을 반환하세요."""
-    # TODO D28-03-B01: Top-k에서 찾은 Gold 개수 / 전체 Gold 개수를 계산하세요. Gold가 빈 질문은 None을 반환하세요.
-    # 힌트: 예: Gold 2개 중 Top-3에 1개면 Recall@3=0.5입니다.
-    raise NotImplementedError("D28-03-B01 TODO를 완성하세요")
+    # Gold가 비어 있는 무정답(No-answer) 질문은 Recall 평균에서 제외하기 위해 None 반환
+    if not gold:
+        return None
+    # Top-k 내 고유 Gold 적중 개수를 전체 고유 Gold 개수로 나누어 Recall@k 계산
+    hits = count_gold_hits(ranked, gold, k)
+    return hits / len(set(gold))
 
 def count_gold_hits(ranked: list[str], gold: list[str], k: int) -> int:
     """Top-k 목록과 Gold의 교집합 크기를 반환하세요. 중복 ID는 한 번만 셉니다."""
-    # TODO D28-03-B02: Top-k 목록과 Gold의 교집합 크기를 반환하세요. 중복 ID는 한 번만 셉니다.
-    # 힌트: set 교집합(&)을 사용할 수 있습니다.
-    raise NotImplementedError("D28-03-B02 TODO를 완성하세요")
+    # Top-k 슬라이싱 후 set 교집합(&)으로 중복 없이 적중 개수 계산
+    return len(set(ranked[:k]) & set(gold))
 
 
 def main():
@@ -58,3 +60,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 03 요약]
+1. count_gold_hits(): Top-k 검색 결과와 Gold 집합의 교집합 크기를 중복 없이 계산합니다.
+2. calculate_recall(): 적중 개수를 전체 고유 Gold 개수로 나누어 Recall@k를 구하며, 무정답(빈 Gold) 질문은 None을 반환합니다.
+3. --offline 실행 시 Q01, Q07, Q06의 Recall@3 및 적중 수를 outputs/result.json에 기록합니다.
+"""
