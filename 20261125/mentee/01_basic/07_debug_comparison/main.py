@@ -16,15 +16,32 @@ from coursekit.eval_report import write_json
 
 def score_delta(before: float | None, after: float | None) -> float | None:
     """같은 질문의 Before/After 점수 변화량을 계산하세요. No-answer(None)는 수치 차이를 만들지 않습니다."""
-    # TODO D28-07-B01: 같은 질문의 Before/After 점수 변화량을 계산하세요. No-answer(None)는 수치 차이를 만들지 않습니다.
-    # 힌트: A/B 비교 전 두 실행의 Dataset 버전과 모드가 같아야 합니다.
-    raise NotImplementedError("D28-07-B01 TODO를 완성하세요")
+    # No-answer(None)가 포함된 경우 비교 불가하므로 None 반환
+    if before is None or after is None:
+        return None
+    # 개선 전후 점수 차이(after - before) 계산
+    return after - before
 
 def find_problem_stage(run: dict, gold: list[str]) -> str:
     """검색 후보 누락·Reranking 누락·Context 누락·생성 실패 중 어디인지 반환하세요."""
-    # TODO D28-07-B02: 검색 후보 누락·Reranking 누락·Context 누락·생성 실패 중 어디인지 반환하세요.
-    # 힌트: Candidate에 Gold가 없다면 먼저 Retrieval 단계 문제입니다.
-    raise NotImplementedError("D28-07-B02 TODO를 완성하세요")
+    # 무정답(No-answer) 질문은 실패 단계 진단 대상에서 제외
+    if not gold:
+        return "no_answer"
+    gold_set = set(gold)
+    # 1. 1차 검색 후보(candidate_ids)에 Gold가 없으면 검색 후보 누락
+    candidates = set(run.get("candidate_ids") or run.get("ranked_ids", []))
+    if not (candidates & gold_set):
+        return "retrieval_candidate_miss"
+    # 2. Reranking 상위 결과(ranked_ids[:3])에 Gold가 없으면 Reranking 누락
+    reranked = set(run.get("ranked_ids", [])[:3])
+    if not (reranked & gold_set):
+        return "reranking_miss"
+    # 3. 최종 Context(included_ids)에 Gold가 없으면 Context 누락
+    included = set(run.get("included_ids", run.get("ranked_ids", [])[:3]))
+    if not (included & gold_set):
+        return "context_miss"
+    # 4. 앞선 검색/Context 단계가 모두 정상이면 생성 단계 문제로 분류
+    return "generation_or_ok"
 
 
 def main():
@@ -58,3 +75,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 07 요약]
+1. score_delta(): 동일 질문의 Before/After 점수 차이(after - before)를 계산하며, No-answer(None)는 None으로 유지합니다.
+2. find_problem_stage(): 검색 후보 -> Reranking Top-3 -> 최종 Context 순으로 Gold 포함 여부를 점검해 병목 단계를 진단합니다.
+3. --offline 실행 시 baseline과 rerank_only 비교 결과를 outputs/result.json에 기록합니다.
+"""
