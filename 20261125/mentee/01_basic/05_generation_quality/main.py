@@ -16,15 +16,23 @@ from coursekit.eval_report import write_json
 
 def claim_faithfulness(claims: list[dict]) -> float | None:
     """Claim 목록에서 근거가 지지하는 Claim 비율을 계산하세요. Claim이 없으면 None."""
-    # TODO D28-05-B01: Claim 목록에서 근거가 지지하는 Claim 비율을 계산하세요. Claim이 없으면 None.
-    # 힌트: 모든 Claim의 supported는 교육용 사람 레이블입니다.
-    raise NotImplementedError("D28-05-B01 TODO를 완성하세요")
+    # Claim 목록이 비어 있으면 Faithfulness를 계산할 수 없으므로 None 반환
+    if not claims:
+        return None
+    # supported가 True인 Claim 개수를 전체 Claim 개수로 나누어 비율 계산
+    supported_count = sum(1 for claim in claims if claim.get("supported"))
+    return supported_count / len(claims)
 
 def describe_claim_result(claims: list[dict]) -> str:
     """비지원 Claim을 이름과 함께 기록하세요. “모든 Claim 지원”과 “Claim 없음”은 구별합니다."""
-    # TODO D28-05-B02: 비지원 Claim을 이름과 함께 기록하세요. “모든 Claim 지원”과 “Claim 없음”은 구별합니다.
-    # 힌트: Faithfulness는 Reference Answer와의 비교가 아닙니다.
-    raise NotImplementedError("D28-05-B02 TODO를 완성하세요")
+    # Claim이 아예 없는 경우와 모든 Claim이 지원되는 경우를 명확히 구분
+    if not claims:
+        return "Claim 없음"
+    # 근거가 지지하지 않는(supported=False) Claim의 텍스트 목록 추출
+    unsupported = [claim.get("text", "(이름 없음)") for claim in claims if not claim.get("supported")]
+    if not unsupported:
+        return "모든 Claim 지원"
+    return f"비지원 Claim: {', '.join(unsupported)}"
 
 
 def main():
@@ -58,3 +66,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 05 요약]
+1. claim_faithfulness(): 답변에서 추출된 Claim 목록 중 근거가 지지하는(supported=True) 비율을 계산하며, Claim이 없으면 None을 반환합니다.
+2. describe_claim_result(): 'Claim 없음', '모든 Claim 지원', 그리고 비지원 Claim 목록을 구분해 기록합니다.
+3. --offline 실행 시 generation_claims.json 기반 Faithfulness 검수 결과를 outputs/result.json에 저장합니다.
+"""
