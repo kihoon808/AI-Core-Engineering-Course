@@ -12,19 +12,36 @@ if str(ROLE_ROOT) not in sys.path:
 
 from coursekit.eval_workshops import execute
 from coursekit.eval_report import write_json
+from coursekit.eval_metrics import evaluate_retrieval, mean_valid
 
 
 def evaluate_one(example: dict, run: dict, gold: list[str], grades: dict) -> dict:
     """질문 ID로 Target 출력과 Gold를 결합해 평가 레코드를 반환하세요."""
-    # TODO D28-08-B01: 질문 ID로 Target 출력과 Gold를 결합해 평가 레코드를 반환하세요.
-    # 힌트: Trace 필드가 빠졌다면 빈 리스트로 바꾸지 말고 오류로 보고합니다.
-    raise NotImplementedError("D28-08-B01 TODO를 완성하세요")
+    # 필수 Trace 필드가 누락되면 빈 리스트로 덮지 않고 명시적 오류로 보고
+    if "ranked_ids" not in run or "included_ids" not in run:
+        raise KeyError("Target 실행 결과에 필수 Trace 필드(ranked_ids, included_ids)가 없습니다.")
+    # Retrieval 지표(Recall@3, MRR@3 등) 계산 (무정답 질문은 내부에서 None 처리)
+    metrics = evaluate_retrieval(run["ranked_ids"], gold, grades, 3)
+    return {
+        "question_id": example["question_id"],
+        "no_answer": len(gold) == 0,
+        "has_error": bool(run.get("error")),
+        "citations": run.get("citations", []),
+        "included_ids": run["included_ids"],
+        **metrics,
+    }
 
 def summarize_all(rows: list[dict]) -> dict:
     """개별 질문 결과의 평균(유효 Gold만)과 오류·출처 상태를 집계하세요."""
-    # TODO D28-08-B02: 개별 질문 결과의 평균(유효 Gold만)과 오류·출처 상태를 집계하세요.
-    # 힌트: No-answer 질문은 Retrieval 평균에서 제외하고 별도 개수로 기록합니다.
-    raise NotImplementedError("D28-08-B02 TODO를 완성하세요")
+    # No-answer(None)를 제외한 유효 Gold 질문만으로 평균 Recall@3 및 MRR@3 집계
+    return {
+        "total_questions": len(rows),
+        "no_answer_count": sum(1 for r in rows if r.get("no_answer")),
+        "error_count": sum(1 for r in rows if r.get("has_error")),
+        "with_citations_count": sum(1 for r in rows if r.get("citations")),
+        "mean_recall_at_3": mean_valid([r.get("recall_at_k") for r in rows]),
+        "mean_mrr_at_3": mean_valid([r.get("mrr_at_k") for r in rows]),
+    }
 
 
 def main():
@@ -58,3 +75,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 08 요약]
+1. evaluate_one(): 필수 Trace 필드(ranked_ids, included_ids) 누락 시 오류를 보고하고, 질문별 Retrieval 지표와 출처/오류 상태를 결합합니다.
+2. summarize_all(): No-answer 질문을 제외한 유효 Gold 질문만으로 평균 Recall@3 및 MRR@3를 집계하고 무정답/오류/출처 건수를 요약합니다.
+3. --offline 실행 시 전체 질문 평가 및 요약 리포트를 outputs/result.json에 기록합니다.
+"""
