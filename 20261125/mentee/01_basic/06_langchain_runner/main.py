@@ -16,15 +16,21 @@ from coursekit.eval_report import write_json
 
 def safe_target_input(example: dict) -> dict:
     """question_id·question·category·history만 새 dict로 복사하고 Gold·Reference를 제외하세요."""
-    # TODO D28-06-B01: question_id·question·category·history만 새 dict로 복사하고 Gold·Reference를 제외하세요.
-    # 힌트: Target Runner는 정답을 모르는 상태에서 실행해야 공정합니다.
-    raise NotImplementedError("D28-06-B01 TODO를 완성하세요")
+    # Gold/Reference 정답 정보 누출을 막기 위해 허용된 입력 필드만 화이트리스트 방식으로 복사
+    allowed_keys = ("question_id", "question", "category", "history")
+    return {key: example.get(key) for key in allowed_keys}
 
 def invoke_target(target, request: dict) -> dict:
     """실제 Runnable.invoke(request)를 호출하고 결과가 dict이며 질문 ID가 같은지 확인하세요."""
-    # TODO D28-06-B02: 실제 Runnable.invoke(request)를 호출하고 결과가 dict이며 질문 ID가 같은지 확인하세요.
-    # 힌트: 단순 함수 직접 호출 대신 RunnableLambda를 감싼 객체의 invoke()입니다.
-    raise NotImplementedError("D28-06-B02 TODO를 완성하세요")
+    # LangChain Runnable 인터페이스의 invoke() 메서드로 Target 실행
+    response = target.invoke(request)
+    # 반환 타입이 dict인지 검증
+    if not isinstance(response, dict):
+        raise TypeError("Target 실행 결과는 dict여야 합니다.")
+    # 요청과 응답의 question_id가 일치하는지 검증하여 결과 뒤섞임 방지
+    if response.get("question_id") != request.get("question_id"):
+        raise ValueError("응답의 question_id가 요청과 일치하지 않습니다.")
+    return response
 
 
 def main():
@@ -58,3 +64,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 06 요약]
+1. safe_target_input(): question_id, question, category, history만 추출해 Gold/Reference 누출을 원천 차단합니다.
+2. invoke_target(): LangChain Runnable의 invoke()를 호출하고 dict 반환 여부 및 question_id 일치를 검증합니다.
+3. --offline 실행 시 3개 질문에 대한 Target 실행 결과를 outputs/result.json에 기록합니다.
+"""
