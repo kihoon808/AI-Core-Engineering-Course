@@ -16,15 +16,18 @@ from coursekit.eval_report import write_json
 
 def select_gold(question_id: str, gold: dict) -> list[str]:
     """gold[question_id]에서 관련 청크 ID 목록을 읽어 중복 없는 list로 반환하세요. 모델 검색 결과를 입력으로 쓰지 마세요."""
-    # TODO D28-02-B01: gold[question_id]에서 관련 청크 ID 목록을 읽어 중복 없는 list로 반환하세요. 모델 검색 결과를 입력으로 쓰지 마세요.
-    # 힌트: Gold는 Retriever의 정답이 아니라 평가용 레이블입니다.
-    raise NotImplementedError("D28-02-B01 TODO를 완성하세요")
+    # 평가용 Gold 딕셔너리에서 해당 질문의 정답 청크 ID 목록을 조회 (없으면 빈 리스트)
+    raw_ids = gold.get(question_id, [])
+    # 입력 순서를 유지하면서 중복 ID를 제거하여 반환
+    return list(dict.fromkeys(raw_ids))
 
 def validate_gold_ids(ids: list[str], corpus: dict) -> bool:
     """ID 중복이 없고 모든 ID가 Corpus에 실제 존재하는지 검사하세요."""
-    # TODO D28-02-B02: ID 중복이 없고 모든 ID가 Corpus에 실제 존재하는지 검사하세요.
-    # 힌트: set의 길이와 corpus.keys()를 활용하세요.
-    raise NotImplementedError("D28-02-B02 TODO를 완성하세요")
+    # 1. 리스트 내 중복 ID가 있는지 set 길이 비교로 확인
+    if len(ids) != len(set(ids)):
+        return False
+    # 2. 모든 Gold ID가 실제 corpus 키에 존재하는지 검증 (무정답 빈 리스트도 True)
+    return all(chunk_id in corpus for chunk_id in ids)
 
 
 def main():
@@ -58,3 +61,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 02 요약]
+1. select_gold(): gold[question_id]에서 관련 청크 ID를 조회하고 순서를 유지한 채 중복을 제거해 반환합니다.
+2. validate_gold_ids(): 반환된 Gold ID 목록에 중복이 없고 모든 ID가 corpus에 실제 존재하는지 검증합니다.
+3. --offline 실행 시 Q01, Q05, Q06, Q07의 Gold 어노테이션과 무정답(빈 목록) 케이스를 outputs/result.json에 기록합니다.
+"""
