@@ -16,15 +16,21 @@ from coursekit.eval_report import write_json
 
 def first_relevant_rank(ranked: list[str], gold: list[str], k: int) -> int | None:
     """Top-k에서 첫 Gold 문서가 등장하는 1부터 시작하는 순위를 찾으세요. 없으면 None."""
-    # TODO D28-04-B01: Top-k에서 첫 Gold 문서가 등장하는 1부터 시작하는 순위를 찾으세요. 없으면 None.
-    # 힌트: enumerate(..., start=1)을 활용하세요.
-    raise NotImplementedError("D28-04-B01 TODO를 완성하세요")
+    # O(1) 조회를 위해 Gold 목록을 set으로 변환
+    gold_set = set(gold)
+    # Top-k 문서를 1부터 시작하는 순위와 함께 순회하며 첫 번째 Gold 위치 반환
+    for rank, doc_id in enumerate(ranked[:k], start=1):
+        if doc_id in gold_set:
+            return rank
+    return None
 
 def calculate_rr(position: int | None) -> float:
     """관련 문서 첫 순위의 역수(1/rank)를 반환하세요. 문서가 없으면 0.0입니다."""
-    # TODO D28-04-B02: 관련 문서 첫 순위의 역수(1/rank)를 반환하세요. 문서가 없으면 0.0입니다.
-    # 힌트: Gold가 아예 없는 No-answer 사례는 집계 대상에서 제외합니다.
-    raise NotImplementedError("D28-04-B02 TODO를 완성하세요")
+    # Top-k 내에 관련 문서가 없으면(None) 0.0 반환
+    if position is None:
+        return 0.0
+    # 첫 관련 문서 순위의 역수(Reciprocal Rank) 계산
+    return 1.0 / position
 
 
 def main():
@@ -58,3 +64,10 @@ def main():
 
 if __name__=='__main__':
     main()
+
+"""
+[실습 04 요약]
+1. first_relevant_rank(): Top-k 결과에서 첫 번째 Gold 문서가 등장하는 1-based 순위를 찾고, 없으면 None을 반환합니다.
+2. calculate_rr(): 첫 순위의 역수(1/rank)를 계산하며, 관련 문서가 없으면 0.0을 반환합니다.
+3. --offline 실행 시 Q01, Q07, Q06(No-answer 제외)의 RR@3 및 전체 MRR@3를 outputs/result.json에 기록합니다.
+"""
