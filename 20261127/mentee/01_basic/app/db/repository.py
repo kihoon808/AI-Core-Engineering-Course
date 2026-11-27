@@ -27,13 +27,56 @@ class Repository:
             count = conn.execute(text('SELECT count(*) '+JOIN+' WHERE '+FRESH),{'model':MODEL}).scalar_one()
             return {'db':'ready','database':db,'pgvector':extension,'categories':sorted(codes),'eligible_vectors':count}
     def candidates(self, vector, category_code, top_k, report_id=None):
-        # TODO B-05: SELECT에 VIEW 필드와 embedding cosine distance(<=>)를 포함하세요. 고정 JOIN/FRESH를 사용하고 :vec, :cat, :rid, :k, :model 바인딩을 적용해 distance 오름차순 TOP-k를 반환하세요. SQL 문자열에 사용자 입력을 직접 넣지 마세요.
-        raise ServiceError('NOT_IMPLEMENTED','B-05')
-        # END TODO B-05
+        # pgvector 입력용 문자열 직렬화 (값 바인딩으로 SQL 삽입 차단)
+        vec_literal = '[' + ','.join(str(float(x)) for x in vector) + ']'
+        sql = f"""
+            SELECT v.report_id, v.category_code, v.title, v.content, v.overview, v.revision,
+                   (e.embedding OPERATOR(public.<=>) CAST(:vec AS vector)) AS distance
+            {JOIN}
+            WHERE {FRESH}
+              AND (CAST(:cat AS TEXT) IS NULL OR v.category_code=:cat)
+              AND (CAST(:rid AS BIGINT) IS NULL OR v.report_id=:rid)
+            ORDER BY distance ASC, v.report_id ASC
+            LIMIT :k
+        """
+        with self.db.read() as conn:
+            rows = conn.execute(
+                text(sql),
+                {
+                    'vec': vec_literal,
+                    'cat': category_code,
+                    'rid': report_id,
+                    'k': int(top_k),
+                    'model': MODEL,
+                },
+            ).mappings()
+            return [dict(r) for r in rows]
+
     def lookup(self, report_id):
-        # TODO B-10: reports와 report_categories JOIN, report_embeddings LEFT JOIN을 사용하세요. WHERE report_id=:rid, FRESH의 COALESCE(false)로 최신성 검사. 실제 행이면 found, 없으면 not_found 반환.
-        raise ServiceError('NOT_IMPLEMENTED','B-10')
-        # END TODO B-10
+        # report_embeddings가 없어도 보고서 기본 상태는 조회되도록 LEFT JOIN 사용
+        sql = f"""
+            SELECT r.report_id, c.code AS category_code, r.index_status, r.revision,
+                   COALESCE({FRESH}, false) AS embedding_fresh
+            FROM public.reports r
+            JOIN public.report_categories c ON c.category_id = r.category_id
+            LEFT JOIN public.report_embeddings e ON e.report_id = r.report_id
+            WHERE r.report_id=:rid
+        """
+        with self.db.read() as conn:
+            row = conn.execute(
+                text(sql),
+                {'rid': int(report_id), 'model': MODEL},
+            ).mappings().first()
+            if row is None:
+                return {'status': 'not_found', 'report_id': int(report_id)}
+            return {
+                'status': 'found',
+                'report_id': row['report_id'],
+                'category_code': row['category_code'],
+                'index_status': row['index_status'],
+                'revision': row['revision'],
+                'embedding_fresh': bool(row['embedding_fresh']),
+            }
     def snapshot(self):
         # 고정된 테이블 목록만 사용. 내용/비밀번호를 출력하지 않고 row count와 digest만 저장.
         with self.db.read() as conn:
