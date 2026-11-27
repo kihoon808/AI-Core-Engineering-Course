@@ -51,5 +51,5 @@ class RagResult(Contract):
     sources: list[Source]
 class ModelAnswer(Contract):
     status: Status
-    answer: Annotated[str,StringConstraints(strip_whitespace=True,min_length=1,max_length=12000)]
-    source_ids: list[str]
+    answer: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=12000), Field(description='최종 답변. rag_search 결과를 인용할 때는 본문에 반드시 [RPT-번호] 형식을 포함할 것')]
+    source_ids: list[str] = Field(description='본문에 [RPT-번호]로 인용한 rag_search 출처 ID 목록. 본문 인용과 정확히 일치해야 하며, lookup_status만 썼다면 빈 배열 []')
