@@ -15,9 +15,14 @@ def parse_answer(content):
         raise ServiceError('OUTPUT_CONTRACT_ERROR','invalid_model_json') from None
 
 def citation_ids(answer, allowed):
-    # TODO B-13: answer.answer에서 RPT-숫자 정규식으로 inline ID를 추출하세요. source_ids와 일치하고 중복이 없어야 하며 allowed 집합의 부분집합이어야 합니다.
-    raise ServiceError('NOT_IMPLEMENTED','B-13')
-    # END TODO B-13
+    # 본문의 [RPT-번호] 인용과 source_ids 배열이 중복 없이 정확히 일치하고 허용 집합에 속하는지 검사
+    inline = re.findall(r'RPT-\d+', answer.answer)
+    ids = answer.source_ids
+    if len(ids) != len(set(ids)):
+        return False
+    if set(inline) != set(ids):
+        return False
+    return set(ids).issubset(set(allowed))
 
 def check_tool_output(name,result):
     try:
