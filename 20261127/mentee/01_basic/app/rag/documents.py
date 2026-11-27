@@ -3,9 +3,19 @@ from langchain_core.documents import Document
 from app.services.errors import ServiceError
 
 def to_document(row):
-    # TODO B-06: Document의 page_content에는 row[content]를, metadata에는 source_id=RPT-번호, report_id/title/category_code/revision/overview/distance를 넣으세요.
-    raise ServiceError('NOT_IMPLEMENTED','B-06')
-    # END TODO B-06
+    # 검색용 overview와 답변 근거용 content를 분리해 Document와 metadata에 저장
+    return Document(
+        page_content=row['content'],
+        metadata={
+            'source_id': f"RPT-{row['report_id']}",
+            'report_id': row['report_id'],
+            'title': row['title'],
+            'category_code': row['category_code'],
+            'revision': row['revision'],
+            'overview': row['overview'],
+            'distance': float(row['distance']),
+        },
+    )
 
 def source_of(doc):
     return {k:doc.metadata[k] for k in ('source_id','report_id','title','category_code','revision')}
