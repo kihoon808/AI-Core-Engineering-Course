@@ -22,9 +22,20 @@ class Reranker:
                 if str(self.model.model.device)!='cuda:0':
                     raise ServiceError('GPU_UNAVAILABLE')
                 start=perf_counter()
-                # TODO B-07: (query, title + overview) 쌍 목록을 만들고 self.model.predict(..., batch_size=..., show_progress_bar=False)를 호출하세요. docs와 scores를 zip하여 점수 내림차순, ID 오름차순으로 ranked를 구성하세요.
-                raise ServiceError('NOT_IMPLEMENTED','B-07')
-                # END TODO B-07
+                # Query와 (title + overview) 쌍을 구성해 CUDA Cross-Encoder로 재정렬 점수 계산
+                pairs = [
+                    (query, f"{d.metadata.get('title', '')} {d.metadata.get('overview', '')}".strip())
+                    for d in docs
+                ]
+                scores = self.model.predict(
+                    pairs,
+                    batch_size=self.settings.rerank_batch_size,
+                    show_progress_bar=False,
+                )
+                ranked = sorted(
+                    zip(docs, scores),
+                    key=lambda item: (-float(item[1]), item[0].metadata['report_id']),
+                )
                 meter.record('cross_encoder_rerank',start)
                 if len(ranked)!=len(docs) or any(not math.isfinite(float(s)) for _,s in ranked):
                     raise ServiceError('RERANKER_UNAVAILABLE','invalid_score')
