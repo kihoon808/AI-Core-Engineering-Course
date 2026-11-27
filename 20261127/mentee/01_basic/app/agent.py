@@ -30,7 +30,7 @@ SYSTEM = """
 - incomplete: 일부 업무만 수행했거나 완료하지 못한 경우
 
 [출처 규칙]
-- 실제 RAG Tool에서 반환된 출처만 사용한다. 본문에 [RPT-번호] 형식으로 인용한다.
+- 실제 RAG Tool에서 반환된 출처만 사용한다. rag_search 결과를 인용할 때는 '보고서 63'처럼만 쓰지 말고 answer 본문 텍스트 안에도 반드시 '[RPT-번호]' 문자열을 직접 표기하고 source_ids에도 동일하게 포함한다.
 - 본문에 인용한 출처와 source_ids는 정확히 일치해야 한다.
 - 상태 조회만 수행한 경우 source_ids는 빈 배열이며 본문에 RPT-번호를 쓰지 않는다.
 - 실제 DB 상태 값은 서버가 별도로 붙인다. answer에 상태 값을 반복하거나 임의로 생성하지 않는다.
@@ -73,9 +73,19 @@ class AgentService:
         middleware=[ToolCallLimitMiddleware(run_limit=self.settings.max_tool_calls,exit_behavior="error"),
                     ModelCallLimitMiddleware(run_limit=self.settings.max_model_calls,exit_behavior="error"),measure_model]
         try:
-            # TODO B-11: create_agent에 model, tools, system_prompt, middleware를 전달하고 response_format=ProviderStrategy(ModelAnswer)를 지정하세요. agent.invoke의 messages에 user question과 Category를 넣고 config recursion_limit을 유한하게 지정하세요.
-            raise ServiceError('NOT_IMPLEMENTED','B-11')
-            # END TODO B-11
+            # ProviderStrategy(ModelAnswer)로 네이티브 Structured Output을 강제해 Agent 생성
+            agent = create_agent(
+                model=self.model_factory(),
+                tools=tools,
+                system_prompt=SYSTEM,
+                middleware=middleware,
+                response_format=ProviderStrategy(ModelAnswer),
+            )
+            user_content = question if category is None else f"{question}\n[검색 Category: {category}]"
+            result = agent.invoke(
+                {'messages': [{'role': 'user', 'content': user_content}]},
+                config={'recursion_limit': 2 * self.settings.max_model_calls + 8},
+            )
         except ServiceError:
             raise
         except Exception as exc:
