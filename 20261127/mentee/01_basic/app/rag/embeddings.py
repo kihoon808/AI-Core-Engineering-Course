@@ -22,9 +22,9 @@ class E5:
                 if str(self.model.device) != 'cuda:0':
                     raise ServiceError('GPU_UNAVAILABLE')
                 start=perf_counter()
-                # TODO B-04: self.model.encode에 query: 접두어가 붙은 문자열을 전달하고 normalize_embeddings=True를 지정하세요. ndarray를 list로 변환하세요.
-                raise ServiceError('NOT_IMPLEMENTED','B-04')
-                # END TODO B-04
+                # E5 규격에 맞춰 query: 접두어를 부여하고 L2 정규화된 384차원 벡터 생성
+                encoded = self.model.encode(f"query: {query}", normalize_embeddings=True)
+                vector = encoded.tolist()
                 meter.record('query_embedding',start)
                 if len(vector)!=384 or not all(math.isfinite(x) for x in vector) or abs(sum(x*x for x in vector)-1)>0.01:
                     raise ServiceError('EMBEDDING_UNAVAILABLE','invalid_vector')
