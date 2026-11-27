@@ -1,5 +1,10 @@
 # Day30 · 01_basic 수강생용
 
+> **실습 결과 및 기술 보고서**:
+> - [REPORT.md (기술 분석 및 실측 검증 보고서)](REPORT.md)
+> - [DISCUSSION_GUIDE.md (기초부터 결과까지 완벽 가이드)](DISCUSSION_GUIDE.md)
+> - [reports/review.md (구현 요약 및 실측 캡처 리뷰)](reports/review.md)
+
 **목표:** 비전공자도 이번 신규 프로젝트에서 실제 LangChain Agent + Tool 2개를 구현합니다. 제공한 코드는 환경, 예외, 데이터 모델, 호출 예산, 실행 도우미 등 공통 골격이며 아래 TODO는 직접 완성해야 합니다. 11/20 Python 코드 재사용 금지, 기존 DB만 조회.
 
 ## 실행 전에
