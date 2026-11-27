@@ -89,9 +89,13 @@ class RagPipeline:
         model=self.model_factory()
         try:
             meter.reserve('model'); start=perf_counter()
-            # TODO B-08: RunnableLambda에서 prepared의 question/query/context를 추출한 뒤 | RAG_PROMPT | model로 연결하세요. chain.invoke(prepared)의 AIMessage를 message에 저장하세요.
-            raise ServiceError('NOT_IMPLEMENTED','B-08')
-            # END TODO B-08
+            # LCEL 체인으로 질문·검색어·Context를 프롬프트와 모델에 연결
+            chain = (
+                RunnableLambda(lambda data: {key: data[key] for key in ('question', 'query', 'context')})
+                | RAG_PROMPT
+                | model
+            )
+            message = chain.invoke(prepared)
             meter.record('rag_generation',start,getattr(message,'usage_metadata',None))
         except Exception as exc:
             raise llm_error(exc) from None
