@@ -11,6 +11,12 @@ def ask(body:AskRequest,request:Request):
     runtime=request.app.state.get_runtime()
     runtime.health()
     request_id=str(uuid4());meter=Meter(runtime.settings)
-    # TODO B-12: runtime.agent.ask(request_id, body, meter)를 호출하여 반환하세요. 응답 형식은 AskResponse입니다.
-    raise ServiceError('NOT_IMPLEMENTED','B-12')
-    # END TODO B-12
+    # 요청 단위 Meter와 함께 AgentService 실행 결과(AskResponse) 반환
+    return runtime.agent.ask(request_id, body, meter)
+
+
+"""
+[코드 요약]
+- POST /api/v1/agent/ask 요청에 대해 Runtime 건강 상태를 먼저 확인하고 요청별 request_id와 Meter를 생성한다.
+- runtime.agent.ask(request_id, body, meter)를 호출해 검증된 AskResponse 계약 형태로 응답을 반환한다.
+"""
